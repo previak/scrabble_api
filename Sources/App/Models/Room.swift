@@ -44,14 +44,14 @@ final class Room: Model, @unchecked Sendable {
         isPublic: Bool,
         invitationCode: String,
         gameState: GameState,
-        admin: User
+        adminID: UUID
     ) {
         self.id = id
         self.isOpen = isOpen
         self.isPublic = isPublic
         self.invitationCode = invitationCode
         self.gameState = gameState
-        self.admin = admin
+        self.$admin.id = adminID
     }
     
     func toDTO() -> RoomDTO {
