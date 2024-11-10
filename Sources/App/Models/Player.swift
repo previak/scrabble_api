@@ -22,8 +22,8 @@ final class Player: Model, @unchecked Sendable {
     @Field(key: "turn_order")
     var turnOrder: Int;
     
-    @Field(key: "available_tiles")
-    var availableTiles: String;
+    @Field(key: "available_letters")
+    var availableLetters: String;
     
     init() {}
     
@@ -42,7 +42,7 @@ final class Player: Model, @unchecked Sendable {
         self.nickname = nickname
         self.score = score
         self.turnOrder = turnOrder
-        self.availableTiles = availabeTiles
+        self.availableLetters = availabeTiles
     }
     
     func toDTO() -> PlayerDTO {
@@ -52,7 +52,7 @@ final class Player: Model, @unchecked Sendable {
               nickname: self.nickname,
               score: self.score,
               turnOrder: self.turnOrder,
-              availableTiles: self.availableTiles
+              availableLetters: self.availableLetters
             
         )
     }

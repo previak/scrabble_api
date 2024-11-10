@@ -8,7 +8,7 @@ public struct PlayerDTO: Codable {
     var nickname: String
     var score: Int;
     var turnOrder: Int;
-    var availableTiles: String;
+    var availableLetters: String;
     
     func toModel() -> Player {
         let model = Player()
@@ -23,7 +23,7 @@ public struct PlayerDTO: Codable {
         model.nickname = nickname
         model.score = score
         model.turnOrder = turnOrder
-        model.availableTiles = availableTiles
+        model.availableLetters = availableLetters
         
         return model
     }
