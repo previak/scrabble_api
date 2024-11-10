@@ -18,25 +18,25 @@ final class User: Model, @unchecked Sendable {
     var username: String
     
     @Field(key: "password_hash")
-    var password_hash: String
+    var passwordHash: String
     
     @Field(key: "api_key")
-    var api_key: String
+    var apiKey: String
     
     init() {}
     
-    init(id: UUID? = nil, username: String, password_hash: String, api_key: String) {
+    init(id: UUID? = nil, username: String, passwordHash: String, apiKey: String) {
         self.id = id
         self.username = username
-        self.password_hash = password_hash
-        self.api_key = api_key
+        self.passwordHash = passwordHash
+        self.apiKey = apiKey
     }
     
     func toDTO() -> UserDTO {
         .init(id: self.id,
               username: self.username,
-              password_hash: self.password_hash,
-              api_key: self.api_key
+              passwordHash: self.passwordHash,
+              apiKey: self.apiKey
         )
     }
 }

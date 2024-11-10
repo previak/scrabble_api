@@ -11,8 +11,8 @@ import Vapor
 public struct UserDTO: Codable {
     var id: UUID?
     var username: String
-    var password_hash: String
-    var api_key: String
+    var passwordHash: String
+    var apiKey: String
     
     func toModel() -> User {
         let model = User()
@@ -22,8 +22,8 @@ public struct UserDTO: Codable {
         }
         
         model.username = username
-        model.password_hash = password_hash
-        model.api_key = api_key
+        model.passwordHash = passwordHash
+        model.apiKey = apiKey
         
         return model
     }
