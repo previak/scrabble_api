@@ -47,8 +47,8 @@ final class Player: Model, @unchecked Sendable {
     
     func toDTO() -> PlayerDTO {
         .init(id: self.id,
-              userId: self.$user.id,
-              gameId: self.$game.id,
+              user: self.user.toDTO(),
+              game: self.game.toDTO(),
               nickname: self.nickname,
               score: self.score,
               turnOrder: self.turnOrder,

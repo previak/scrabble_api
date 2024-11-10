@@ -1,16 +1,9 @@
-//
-//  GameDTO.swift
-//  ScrabbleAPI
-//
-//  Created by Danil Kunashev on 10.11.2024.
-//
-
 import Fluent
 import Vapor
 
 public struct GameDTO: Codable {
     var id: UUID?
-    var room: Room
+    var room: RoomDTO
     var isPaused: Bool
     
     func toModel() -> Game {
@@ -20,7 +13,7 @@ public struct GameDTO: Codable {
             model.id = id
         }
         
-        model.room = room
+        model.room = room.toModel()
         model.isPaused = isPaused
         
         return model

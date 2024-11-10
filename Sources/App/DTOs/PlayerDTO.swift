@@ -3,8 +3,8 @@ import Vapor
 
 public struct PlayerDTO: Codable {
     var id: UUID?
-    var userId: UUID?
-    var gameId: UUID?
+    var user: UserDTO
+    var game: GameDTO
     var nickname: String
     var score: Int;
     var turnOrder: Int;
@@ -17,13 +17,8 @@ public struct PlayerDTO: Codable {
             model.id = id
         }
         
-        if let userId = userId {
-            model.$user.id = userId
-        }
-        
-        if let gameId = gameId {
-            model.$game.id = gameId
-        }
+        model.user = user.toModel()
+        model.game = game.toModel()
         
         model.nickname = nickname
         model.score = score

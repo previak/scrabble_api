@@ -26,7 +26,7 @@ final class Game: Model, @unchecked Sendable {
     func toDTO() -> GameDTO {
         .init(
             id: self.id,
-            room: self.room,
+            room: self.room.toDTO(),
             isPaused: self.isPaused
         )
     }

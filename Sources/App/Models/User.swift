@@ -1,10 +1,3 @@
-//
-//  User.swift
-//  ScrabbleAPI
-//
-//  Created by Danil Kunashev on 10.11.2024.
-//
-
 import Fluent
 import struct Foundation.UUID
 

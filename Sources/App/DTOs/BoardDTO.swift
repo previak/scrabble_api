@@ -3,7 +3,7 @@ import Vapor
 
 struct BoardDTO: Content {
     var id: UUID?
-    var game: Game?
+    var game: GameDTO?
     var tiles: [[TileDTO]]
     
     func toModel() -> Board {
@@ -11,7 +11,7 @@ struct BoardDTO: Content {
         
         model.id = self.id
         if let game = game {
-            model.game = game
+            model.game = game.toModel()
         }
         
         if let tiles = tilesToJSONString(tiles: tiles) {
