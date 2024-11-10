@@ -18,11 +18,11 @@ public struct PlayerDTO: Codable {
         }
         
         if let userId = userId {
-            model.userId = userId
+            model.$user.id = userId
         }
         
         if let gameId = gameId {
-            model.gameId = gameId
+            model.$game.id = gameId
         }
         
         model.nickname = nickname
