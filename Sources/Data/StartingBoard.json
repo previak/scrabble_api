@@ -1,0 +1,932 @@
+[
+  [
+    {
+      "modifier": "tripleWord",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "doubleLetter",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "tripleWord",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "doubleLetter",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "tripleWord",
+      "letter": null
+    }
+  ],
+  [
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "doubleWord",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "tripleLetter",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "tripleLetter",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "doubleWord",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    }
+  ],
+  [
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "doubleWord",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "doubleLetter",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "doubleLetter",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "doubleWord",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    }
+  ],
+  [
+    {
+      "modifier": "doubleLetter",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "doubleWord",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "doubleLetter",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "doubleWord",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "doubleLetter",
+      "letter": null
+    }
+  ],
+  [
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "doubleWord",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "doubleWord",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    }
+  ],
+  [
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "tripleLetter",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "tripleLetter",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "tripleLetter",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "tripleLetter",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    }
+  ],
+  [
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "doubleLetter",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "doubleLetter",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "doubleLetter",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "doubleLetter",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    }
+  ],
+  [
+    {
+      "modifier": "tripleWord",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "doubleLetter",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "doubleWord",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "doubleLetter",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "tripleWord",
+      "letter": null
+    }
+  ],
+  [
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "doubleLetter",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "doubleLetter",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "doubleLetter",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "doubleLetter",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    }
+  ],
+  [
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "tripleLetter",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "tripleLetter",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "tripleLetter",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "tripleLetter",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    }
+  ],
+  [
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "doubleWord",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "doubleWord",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    }
+  ],
+  [
+    {
+      "modifier": "doubleLetter",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "doubleWord",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "doubleLetter",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "doubleWord",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "doubleLetter",
+      "letter": null
+    }
+  ],
+  [
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "doubleWord",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "doubleLetter",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "doubleLetter",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "doubleWord",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    }
+  ],
+  [
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "doubleWord",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "tripleLetter",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "tripleLetter",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "doubleWord",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    }
+  ],
+  [
+    {
+      "modifier": "tripleWord",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "doubleLetter",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "tripleWord",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "doubleLetter",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "empty",
+      "letter": null
+    },
+    {
+      "modifier": "tripleWord",
+      "letter": null
+    }
+  ]
+]
