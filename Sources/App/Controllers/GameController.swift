@@ -10,6 +10,7 @@ struct GameController: RouteCollection {
     
     func boot(routes: RoutesBuilder) throws {
         let games = routes.grouped("games")
+        
         games.get("board", use: getBoard)
     }
     

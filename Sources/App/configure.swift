@@ -18,7 +18,13 @@ public func configure(_ app: Application) async throws {
         tls: .prefer(try .init(configuration: .clientDefault)))
     ), as: .psql)
 
-    app.migrations.add(CreateTodo())
+    app.migrations.add(AddBoardTable())
+    app.migrations.add(AddGameTable())
+    app.migrations.add(AddPlayerTable())
+    app.migrations.add(AddRoomTable())
+    app.migrations.add(AddUserTable())
+    app.migrations.add(AddWordTable())
+    
     // register routes
     try routes(app)
 }
