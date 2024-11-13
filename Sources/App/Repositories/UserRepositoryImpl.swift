@@ -1,8 +1,14 @@
 import Vapor
 
 final class UserRepositoryImpl: UserRepository {
-    func find(id: UUID, on req: Request) -> EventLoopFuture<User?> {
+    func findById(id: UUID, on req: Request) -> EventLoopFuture<User?> {
         return User.find(id, on: req.db)
+    }
+    
+    func findByUsername(username: String, on req: Request) -> EventLoopFuture<User?> {
+        return User.query(on: req.db)
+            .filter(\.$username, .equal, username)
+            .first()
     }
     
     func create(user: User, on req: Request) -> EventLoopFuture<User> {
