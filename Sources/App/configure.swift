@@ -14,12 +14,14 @@ public func configure(_ app: Application) async throws {
         tls: .prefer(try .init(configuration: .clientDefault)))
     ), as: .psql)
     
-    app.migrations.add(AddBoardTable())
-    app.migrations.add(AddGameTable())
-    app.migrations.add(AddPlayerTable())
     app.migrations.add(AddRoomTable())
+    app.migrations.add(AddGameTable())
+    app.migrations.add(AddBoardTable())
     app.migrations.add(AddUserTable())
+    app.migrations.add(AddPlayerTable())
     app.migrations.add(AddWordTable())
+    
+    try app.autoMigrate().wait()
     
     let boardRepository = BoardRepositoryImpl()
     let gameRepository = GameRepositoryImpl()
