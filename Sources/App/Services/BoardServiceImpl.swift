@@ -2,13 +2,42 @@ import Vapor
 import Fluent
 
 final class BoardServiceImpl: BoardService {
+    private let boardRepository: BoardRepository
+    
     private let fileManager = FileManager.default
     private let jsonDecoder = JSONDecoder()
     
     private let startingBoardResourceName = "StartingBoard"
+        
+    init(boardRepository: BoardRepository) {
+            self.boardRepository = boardRepository
+    }
     
     func getStartingBoard(on req: Request) -> EventLoopFuture<BoardDTO> {
         return readBoardFromFile(on: req)
+    }
+    
+    func getBoard(id: UUID, on req: Request) -> EventLoopFuture<BoardDTO> {
+            return boardRepository.find(id: id, on: req).flatMapThrowing { board in
+                guard let board = board else {
+                    throw Abort(.notFound)
+                }
+                return board.toDTO()!
+            }
+        }
+        
+    func createBoard(board: BoardDTO, on req: Request) -> EventLoopFuture<BoardDTO> {
+        let model = board.toModel()
+        return boardRepository.create(board: model, on: req).map { $0.toDTO()! }
+    }
+        
+    func updateBoard(board: BoardDTO, on req: Request) -> EventLoopFuture<BoardDTO> {
+        let model = board.toModel()
+        return boardRepository.update(board: model, on: req).map { $0.toDTO()! }
+    }
+        
+    func deleteBoard(id: UUID, on req: Request) -> EventLoopFuture<Void> {
+        return boardRepository.delete(id: id, on: req)
     }
     
     private func readBoardFromFile(on req: Request) -> EventLoopFuture<BoardDTO> {
