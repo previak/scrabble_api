@@ -1,7 +1,7 @@
 import Fluent
 import Vapor
 
-public struct RoomDTO: Codable {
+public struct RoomDTO: Codable, Sendable {
     var id: UUID?
     var isOpen: Bool
     var isPublic: Bool

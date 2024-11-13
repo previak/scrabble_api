@@ -5,6 +5,15 @@ import Vapor
 
 // configures your application
 public func configure(_ app: Application) async throws {
+    // register services
+    
+    let boardService: BoardService = BoardServiceImpl()
+    try app.register(collection: GameController(boardService: boardService))
+    
+//    app.register(BoardService.self) { _ in
+//        return BoardService()
+//    }
+    
     // uncomment to serve files from /Public folder
     // app.middleware.use(FileMiddleware(publicDirectory: app.directory.publicDirectory))
 

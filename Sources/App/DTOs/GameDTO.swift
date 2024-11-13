@@ -1,7 +1,7 @@
 import Fluent
 import Vapor
 
-public struct GameDTO: Codable {
+public struct GameDTO: Content, Sendable {
     var id: UUID?
     var room: RoomDTO
     var isPaused: Bool

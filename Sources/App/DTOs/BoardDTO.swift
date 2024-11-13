@@ -1,7 +1,7 @@
 import Fluent
 import Vapor
 
-struct BoardDTO: Content {
+struct BoardDTO: Content, Sendable {
     var id: UUID?
     var game: GameDTO?
     var tiles: [[TileDTO]]

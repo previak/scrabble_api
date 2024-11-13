@@ -53,7 +53,6 @@ final class Player: Model, @unchecked Sendable {
               score: self.score,
               turnOrder: self.turnOrder,
               availableLetters: self.availableLetters
-            
         )
     }
 }
