@@ -1,7 +1,7 @@
 import Fluent
 import Vapor
 
-public struct PlayerDTO: Codable {
+public struct PlayerDTO: Content, Codable, Sendable {
     var id: UUID?
     var user: UserDTO
     var game: GameDTO

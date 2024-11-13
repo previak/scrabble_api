@@ -1,7 +1,7 @@
 import Fluent
 import Vapor
 
-public struct UserDTO: Codable {
+public struct UserDTO: Content, Codable, Sendable {
     var id: UUID?
     var username: String
     var passwordHash: String
