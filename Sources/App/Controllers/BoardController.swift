@@ -1,4 +1,5 @@
 import Vapor
+import VaporToOpenAPI
 
 struct BoardController: RouteCollection, Sendable {
     private let boardService: BoardService
