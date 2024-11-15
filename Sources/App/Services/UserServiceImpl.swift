@@ -40,15 +40,22 @@ final class UserServiceImpl: UserService {
                 throw Abort(.unauthorized, reason: "Invalid username or password")
             }
                 
-            let expiration = Date().addingTimeInterval(60 * 60 * 24) // 1 day
+            let expiration = Date().addingTimeInterval(60 * 60 * 24)
             let payload = UserJWTPayload(id: user.id!, username: user.username, expiration: expiration)
             return try req.jwt.sign(payload)
         }
     }
         
-//    func authenticate(jwt: String, on req: Request) -> EventLoopFuture<UserDTO> {
-//        return req.jwt.verify(jwt, as: UserJWTPayload.self).flatMap { payload in
-//            return self.getUser(id: payload.id, on: req)
-//        }
-//    }
+    func authenticate(jwt: String, on req: Request) -> EventLoopFuture<UserDTO> {
+        do {
+            // Attempt to verify the JWT synchronously
+            let payload = try req.jwt.verify(jwt, as: UserJWTPayload.self)
+            
+            // Use the payload to fetch the user asynchronously
+            return self.getUser(id: payload.id, on: req)
+            
+        } catch {
+            return req.eventLoop.makeFailedFuture(error)
+        }
+    }
 }
