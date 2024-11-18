@@ -11,7 +11,6 @@ struct PlayerController: RouteCollection, Sendable {
         let players = routes.grouped("players")
         
         players.get(":id", use: getPlayer)
-        players.post(use: createPlayer)
         players.put(":id", use: updatePlayer)
         players.delete(":id", use: deletePlayer)
     }
@@ -22,12 +21,6 @@ struct PlayerController: RouteCollection, Sendable {
             throw Abort(.badRequest, reason: "Missing or invalid player ID.")
         }
         return playerService.getPlayer(id: id, on: req)
-    }
-    
-    @Sendable
-    func createPlayer(req: Request) throws -> EventLoopFuture<PlayerDTO> {
-        let player = try req.content.decode(PlayerDTO.self)
-        return playerService.createPlayer(player: player, on: req)
     }
     
     @Sendable

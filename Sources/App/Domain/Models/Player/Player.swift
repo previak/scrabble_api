@@ -9,46 +9,47 @@ final class Player: Model, @unchecked Sendable {
     
     @Parent(key: "user_id")
     var user: User
-
-    @Parent(key: "game_id")
-    var game: Game
+    
+    @Parent(key: "room_id")
+    var room: Room
     
     @Field(key: "nickname")
     var nickname: String
     
     @Field(key: "score")
-    var score: Int;
+    var score: Int
     
     @Field(key: "turn_order")
-    var turnOrder: Int;
+    var turnOrder: Int
     
     @Field(key: "available_letters")
-    var availableLetters: String;
+    var availableLetters: String
     
     init() {}
     
     init(
         id: UUID? = nil,
         userID: UUID,
-        gameID: UUID,
+        roomID: UUID,  // Changed from gameID to roomID
         nickname: String,
         score: Int,
         turnOrder: Int,
-        availabeTiles: String
+        availableLetters: String
     ) {
         self.id = id
         self.$user.id = userID
-        self.$game.id = gameID
+        self.$room.id = roomID  // Use roomID instead of gameID
         self.nickname = nickname
         self.score = score
         self.turnOrder = turnOrder
-        self.availableLetters = availabeTiles
+        self.availableLetters = availableLetters
     }
     
+
     func toDTO() -> PlayerDTO {
         .init(id: self.id,
               user: self.user.toDTO(),
-              game: self.game.toDTO(),
+              room: self.room.toDTO(),  // Use room instead of game
               nickname: self.nickname,
               score: self.score,
               turnOrder: self.turnOrder,

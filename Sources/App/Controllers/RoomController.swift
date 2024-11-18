@@ -25,9 +25,24 @@ struct RoomController: RouteCollection, Sendable {
     }
     
     @Sendable
-    func createRoom(req: Request) throws -> EventLoopFuture<RoomDTO> {
-        let room = try req.content.decode(RoomDTO.self)
-        return roomService.createRoom(room: room, on: req)
+    func createRoom(req: Request) throws -> EventLoopFuture<CreateRoomResponseDTO> {
+        let request = try req.content.decode(CreateRoomRequestDTO.self)
+        
+        let createRoomRequest = CreateRoomRequestModel(
+            userId: request.userId,
+            isOpen: request.isOpen,
+            isPublic: request.isPublic,
+            adminNickname: request.adminNickname
+        )
+        
+        return roomService
+            .createRoom(createRequest: createRoomRequest, on: req)
+            .map { responseModel in
+                CreateRoomResponseDTO(
+                    adminUserId: responseModel.adminUserId,
+                    invitationCode: responseModel.invitationCode
+                )
+            }
     }
     
     @Sendable

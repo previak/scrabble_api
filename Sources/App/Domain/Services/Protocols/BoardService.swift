@@ -1,7 +1,7 @@
 import Vapor
 import Fluent
 
-protocol BoardService {
+protocol BoardService: Sendable {
     func getStartingBoard(on req: Request) -> EventLoopFuture<BoardDTO>
     func getBoard(id: UUID, on req: Request) -> EventLoopFuture<BoardDTO>
     func createBoard(board: BoardDTO, on req: Request) -> EventLoopFuture<BoardDTO>

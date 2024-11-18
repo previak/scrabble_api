@@ -8,6 +8,7 @@ enum GameState: String, Codable {
     case finished
 }
 
+
 final class Room: Model, @unchecked Sendable {
     static let schema = "rooms"
     
@@ -37,14 +38,14 @@ final class Room: Model, @unchecked Sendable {
         isPublic: Bool,
         invitationCode: String,
         gameState: GameState,
-        adminID: UUID
+        adminId: UUID
     ) {
         self.id = id
         self.isOpen = isOpen
         self.isPublic = isPublic
         self.invitationCode = invitationCode
         self.gameState = gameState
-        self.$admin.id = adminID
+        self.$admin.id = adminId
     }
     
     func toDTO() -> RoomDTO {

@@ -16,9 +16,18 @@ final class PlayerServiceImpl: PlayerService {
         }
     }
     
-    func createPlayer(player: PlayerDTO, on req: Request) -> EventLoopFuture<PlayerDTO> {
-        let model = player.toModel()
-        return playerRepository.create(player: model, on: req).map { $0.toDTO() }
+    func createPlayer(
+        createRequest: CreatePlayerRequestModel,
+        on req: Request) -> EventLoopFuture<PlayerDTO> {
+        let createPlayerRequest = CreatePlayerRequest(
+            userId: createRequest.userId,
+            roomId: createRequest.roomId,
+            nickname: createRequest.nickname)
+            
+        return playerRepository.create(
+            createRequest: createPlayerRequest,
+            on: req
+        ).map { $0.toDTO() }
     }
     
     func updatePlayer(player: PlayerDTO, on req: Request) -> EventLoopFuture<PlayerDTO> {
