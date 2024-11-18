@@ -3,12 +3,12 @@ import Vapor
 import VaporToOpenAPI
 
 func routes(_ app: Application) throws {
-    app.get("Swagger", "swagger.json") { req in
+    // http://127.0.0.1:8080/swagger/
+    app.get("swagger") { req in
       req.application.routes.openAPI(
         info: InfoObject(
-          title: "Example API",
-          description: "Example API description",
-          version: "0.1.0"
+          title: "Scrabble API",
+          version: "0.0.1"
         )
       )
     }
