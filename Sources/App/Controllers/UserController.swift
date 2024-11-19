@@ -13,13 +13,9 @@ struct UserController: RouteCollection {
         protected.put("users", ":id", use: updateUser)
         protected.delete("users", ":id", use: deleteUser)
         
-        
         let users = routes.grouped("users")
-        
-        //users.get(":id", use: getUser)
+ 
         users.post(use: createUser)
-        //users.put(":id", use: updateUser)
-        //users.delete(":id", use: deleteUser)
         
         let auth = routes.grouped("auth")
         auth.post("login", use: login)
@@ -43,7 +39,6 @@ struct UserController: RouteCollection {
             throw Abort(.badRequest, reason: "Missing or invalid user ID.")
         }
         let user = try req.content.decode(UserDTO.self)
-        // user.id = id
         return userService.updateUser(user: user, on: req)
     }
     

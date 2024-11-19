@@ -21,6 +21,10 @@ public func configure(_ app: Application) async throws {
             defaultFile: "index.html"
         )
     )
+    
+    app.middleware.use(APIKeyMiddleware())
+    app.middleware.use(JWTMiddleware())
+
     // TODO: key should be in a config file that doesnt go to git
     app.jwt.signers.use(.hs256(key: "8f93f7cdeb5cde828a37deb140ca1a3da0a470222599e7efbe9b5f4f5c1fe782"))
     
