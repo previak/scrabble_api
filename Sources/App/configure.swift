@@ -12,36 +12,14 @@ private func getResourcePath(resourceName: String = "") -> String {
 
 
 public func configure(_ app: Application) async throws {
-    app.databases.use(DatabaseConfigurationFactory.postgres(configuration: .init(
-        hostname: Environment.get("DATABASE_HOST") ?? "localhost",
-        port: Environment.get("DATABASE_PORT").flatMap(Int.init(_:)) ?? SQLPostgresConfiguration.ianaPortNumber,
-        username: Environment.get("DATABASE_USERNAME") ?? "vapor_username",
-        password: Environment.get("DATABASE_PASSWORD") ?? "vapor_password",
-        database: Environment.get("DATABASE_NAME") ?? "vapor_database",
-        tls: .prefer(try .init(configuration: .clientDefault)))
-    ), as: .psql)
+    try addDatabase(app)
+    addMiddleware(app)
+    try addMigrations(app)
     
-    app.middleware.use(
-        FileMiddleware(
-            publicDirectory: getResourcePath(),
-            defaultFile: "index.html"
-        )
-    )
     
-    //app.middleware.use(APIKeyMiddleware())
-    //app.middleware.use(JWTMiddleware())
-
     // TODO: key should be in a config file that doesnt go to git
     app.jwt.signers.use(.hs256(key: "8f93f7cdeb5cde828a37deb140ca1a3da0a470222599e7efbe9b5f4f5c1fe782"))
     
-    app.migrations.add(AddRoomTable())
-    app.migrations.add(AddGameTable())
-    app.migrations.add(AddBoardTable())
-    app.migrations.add(AddUserTable())
-    app.migrations.add(AddPlayerTable())
-    app.migrations.add(AddWordTable())
-        
-    try app.autoMigrate().wait()
     
     let boardRepository = BoardRepositoryImpl()
     let gameRepository = GameRepositoryImpl()
@@ -66,4 +44,40 @@ public func configure(_ app: Application) async throws {
     
     // register routes
     try routes(app)
+}
+
+
+private func addDatabase(_ app: Application) throws {
+    app.databases.use(DatabaseConfigurationFactory.postgres(configuration: .init(
+        hostname: Environment.get("DATABASE_HOST") ?? "localhost",
+        port: Environment.get("DATABASE_PORT").flatMap(Int.init(_:)) ?? SQLPostgresConfiguration.ianaPortNumber,
+        username: Environment.get("DATABASE_USERNAME") ?? "vapor_username",
+        password: Environment.get("DATABASE_PASSWORD") ?? "vapor_password",
+        database: Environment.get("DATABASE_NAME") ?? "vapor_database",
+        tls: .prefer(try .init(configuration: .clientDefault)))
+    ), as: .psql)
+}
+
+private func addMiddleware(_ app: Application) {
+    app.middleware.use(
+        FileMiddleware(
+            publicDirectory: getResourcePath(),
+            defaultFile: "index.html"
+        )
+    )
+    
+    //app.middleware.use(APIKeyMiddleware())
+    //app.middleware.use(JWTMiddleware())
+}
+
+
+private func addMigrations(_ app: Application) throws {
+    app.migrations.add(AddRoomTable())
+    app.migrations.add(AddGameTable())
+    app.migrations.add(AddBoardTable())
+    app.migrations.add(AddUserTable())
+    app.migrations.add(AddPlayerTable())
+    app.migrations.add(AddWordTable())
+    
+    try app.autoMigrate().wait()
 }
