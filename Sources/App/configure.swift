@@ -5,6 +5,12 @@ import Vapor
 import JWT
 
 
+private func getResourcePath(resourceName: String = "") -> String {
+    let resourcesPath = "/Contents/Resources"
+    return Bundle.module.bundlePath + resourcesPath + (resourceName.isEmpty ? "" : "/" + resourceName)
+}
+
+
 public func configure(_ app: Application) async throws {
     app.databases.use(DatabaseConfigurationFactory.postgres(configuration: .init(
         hostname: Environment.get("DATABASE_HOST") ?? "localhost",
@@ -17,13 +23,13 @@ public func configure(_ app: Application) async throws {
     
     app.middleware.use(
         FileMiddleware(
-            publicDirectory: app.directory.publicDirectory,
+            publicDirectory: getResourcePath(),
             defaultFile: "index.html"
         )
     )
     
-    app.middleware.use(APIKeyMiddleware())
-    app.middleware.use(JWTMiddleware())
+    //app.middleware.use(APIKeyMiddleware())
+    //app.middleware.use(JWTMiddleware())
 
     // TODO: key should be in a config file that doesnt go to git
     app.jwt.signers.use(.hs256(key: "8f93f7cdeb5cde828a37deb140ca1a3da0a470222599e7efbe9b5f4f5c1fe782"))

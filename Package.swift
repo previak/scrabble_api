@@ -32,7 +32,8 @@ let package = Package(
                 .product(name: "VaporToOpenAPI", package: "VaporToOpenAPI")
             ],
             resources: [
-                .copy("Resources/StartingBoard.json")
+                .copy("Resources/StartingBoard.json"),
+                .copy("Resources/Swagger")
             ],
             swiftSettings: swiftSettings
         ),
