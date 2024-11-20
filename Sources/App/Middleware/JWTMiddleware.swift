@@ -6,7 +6,7 @@ struct JWTMiddleware: AsyncMiddleware {
     
     func respond(to request: Vapor.Request, chainingTo next: any Vapor.AsyncResponder) async
     throws -> Vapor.Response {
-        guard let authHeader = request.headers.bearerAuthorization else {
+        guard request.headers.bearerAuthorization != nil else {
             throw Abort(.unauthorized, reason: "Missing authorization header")
         }
         

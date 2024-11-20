@@ -22,6 +22,7 @@ struct UserController: RouteCollection {
         auth.post("authenticate", use: authenticate)
     }
     
+    @Sendable
     func getUser(req: Request) throws -> EventLoopFuture<UserDTO> {
         guard let id = req.parameters.get("id", as: UUID.self) else {
             throw Abort(.badRequest, reason: "Missing or invalid user ID.")
@@ -29,19 +30,22 @@ struct UserController: RouteCollection {
         return userService.getUser(id: id, on: req)
     }
     
+    @Sendable
     func createUser(req: Request) throws -> EventLoopFuture<UserDTO> {
         let user = try req.content.decode(UserDTO.self)
         return userService.createUser(user: user, on: req)
     }
     
+    @Sendable
     func updateUser(req: Request) throws -> EventLoopFuture<UserDTO> {
-        guard let id = req.parameters.get("id", as: UUID.self) else {
+        guard req.parameters.get("id", as: UUID.self) != nil else {
             throw Abort(.badRequest, reason: "Missing or invalid user ID.")
         }
         let user = try req.content.decode(UserDTO.self)
         return userService.updateUser(user: user, on: req)
     }
     
+    @Sendable
     func deleteUser(req: Request) throws -> EventLoopFuture<HTTPStatus> {
         guard let id = req.parameters.get("id", as: UUID.self) else {
             throw Abort(.badRequest, reason: "Missing or invalid user ID.")
@@ -49,11 +53,13 @@ struct UserController: RouteCollection {
         return userService.deleteUser(id: id, on: req).transform(to: .noContent)
     }
     
+    @Sendable
     func login(req: Request) throws -> EventLoopFuture<String> {
         let credentials = try req.content.decode(LoginCredentials.self)
         return userService.login(username: credentials.username, password: credentials.password, on: req)
     }
     
+    @Sendable
     func authenticate(req: Request) throws -> EventLoopFuture<UserDTO> {
         let authRequest = try req.content.decode(AuthRequest.self)
         return userService.authenticate(jwt: authRequest.token, on: req)

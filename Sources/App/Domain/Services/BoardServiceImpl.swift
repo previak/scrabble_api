@@ -1,6 +1,7 @@
 import Vapor
 import Fluent
 
+
 final class BoardServiceImpl: BoardService {
     private let boardRepository: BoardRepository
     
@@ -60,3 +61,5 @@ final class BoardServiceImpl: BoardService {
         return Bundle.module.url(forResource: resourceName, withExtension: "json")
     }
 }
+
+extension FileManager: @unchecked @retroactive Sendable {}

@@ -1,6 +1,6 @@
 import Vapor
 
-final class RoomServiceImpl: RoomService, Sendable {
+final class RoomServiceImpl: RoomService {
     private let roomRepository: RoomRepository
     private let playerRepository: PlayerRepository
     

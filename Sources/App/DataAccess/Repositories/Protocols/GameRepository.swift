@@ -1,6 +1,6 @@
 import Vapor
 
-protocol GameRepository {
+protocol GameRepository: Sendable {
     func find(id: UUID, on req: Request) -> EventLoopFuture<Game?>
     func create(game: Game, on req: Request) -> EventLoopFuture<Game>
     func update(game: Game, on req: Request) -> EventLoopFuture<Game>
