@@ -13,7 +13,6 @@ private func getResourcePath(resourceName: String = "") -> String {
 
 public func configure(_ app: Application) async throws {
     try addDatabase(app)
-    addMiddleware(app)
     try addMigrations(app)
     
     
@@ -42,7 +41,22 @@ public func configure(_ app: Application) async throws {
     try app.register(collection: UserController(userService: userService))
     try app.register(collection: WordController(wordService: wordService))
     
-    // register routes
+    
+    app.middleware.use(
+        FileMiddleware(
+            publicDirectory: getResourcePath(),
+            defaultFile: "index.html"
+        )
+    )
+
+    let protectedRoutes = app.grouped(APIKeyMiddleware())
+    try protectedRoutes.register(collection: BoardController(boardService: boardService))
+    try protectedRoutes.register(collection: GameController(gameService: gameService))
+    try protectedRoutes.register(collection: PlayerController(playerService: playerService))
+    try protectedRoutes.register(collection: RoomController(roomService: roomService))
+    try protectedRoutes.register(collection: UserController(userService: userService))
+    try protectedRoutes.register(collection: WordController(wordService: wordService))
+    
     try routes(app)
 }
 
@@ -57,19 +71,6 @@ private func addDatabase(_ app: Application) throws {
         tls: .prefer(try .init(configuration: .clientDefault)))
     ), as: .psql)
 }
-
-private func addMiddleware(_ app: Application) {
-    app.middleware.use(
-        FileMiddleware(
-            publicDirectory: getResourcePath(),
-            defaultFile: "index.html"
-        )
-    )
-    
-    //app.middleware.use(APIKeyMiddleware())
-    //app.middleware.use(JWTMiddleware())
-}
-
 
 private func addMigrations(_ app: Application) throws {
     app.migrations.add(AddRoomTable())
