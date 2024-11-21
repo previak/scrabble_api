@@ -8,37 +8,34 @@ struct UserController: RouteCollection {
     }
     
     func boot(routes: RoutesBuilder) throws {
-        let protected = routes.grouped(JWTMiddleware())
-        protected.get("users", ":id", use: getUser)
-        protected.put("users", ":id", use: updateUser)
-        protected.delete("users", ":id", use: deleteUser)
-        
-        let users = routes.grouped("users")
- 
-        users.post(use: createUser)
-
+        let protectedRoutes = routes.grouped(APIKeyMiddleware())
+        let protectedUsers = protectedRoutes.grouped("users")
         let auth = routes.grouped("auth")
+    
+        protectedUsers.get("users", ":id", use: getUser)
+        protectedUsers.put("users", ":id", use: updateUser)
+        protectedUsers.delete("users", ":id", use: deleteUser)
+        
+        
         auth.post("register", use: register)
             .openAPI(
                 summary: "Register",
-                description: "Register a new user and get a JWT token",
-                body: .type(RegisterRequest.self),
-                response: .type(String.self),
-                auth: .apiKey()
+                description: "Register a new user and get a JWT token and API token",
+                body: .type(RegisterRequestDTO.self),
+                response: .type(RegisterResponseDTO.self)
             )
         auth.post("login", use: login)
             .openAPI(
                 summary: "Login",
                 description: "Login",
-                body: .type(LoginCredentials.self),
-                response: .type(String.self),
-                auth: .apiKey()
+                body: .type(LoginRequestDTO.self),
+                response: .type(LoginResponseDTO.self)
             )
         auth.post("authenticate", use: authenticate)
             .openAPI(
                 summary: "Auth",
                 description: "Authenticate",
-                body: .type(AuthRequest.self),
+                body: .type(AuthRequestDTO.self),
                 response: .type(UserDTO.self),
                 auth: .apiKey()
             )
@@ -52,11 +49,6 @@ struct UserController: RouteCollection {
         return userService.getUser(id: id, on: req)
     }
     
-    @Sendable
-    func createUser(req: Request) throws -> EventLoopFuture<UserDTO> {
-        let user = try req.content.decode(UserDTO.self)
-        return userService.createUser(user: user, on: req)
-    }
     
     @Sendable
     func updateUser(req: Request) throws -> EventLoopFuture<UserDTO> {
@@ -76,34 +68,39 @@ struct UserController: RouteCollection {
     }
     
     @Sendable
-    func register(req: Request) throws -> EventLoopFuture<String> {
-        let registerRequest = try req.content.decode(RegisterRequest.self)
-        return userService.register(username: registerRequest.username, password: registerRequest.password, on: req)
+    func register(req: Request) throws -> EventLoopFuture<RegisterResponseDTO> {
+        let registerRequest = try req.content.decode(RegisterRequestDTO.self)
+        let requestModel = RegisterRequestModel(
+            username: registerRequest.username,
+            password: registerRequest.password
+        )
+        
+        return userService.register(registerRequest: requestModel, on: req).flatMap { response in
+            let responseDTO = RegisterResponseDTO(
+                accessToken: response.accessToken,
+                apiKey: response.apiKey
+            )
+            return req.eventLoop.makeSucceededFuture(responseDTO)
+        }
     }
     
     @Sendable
-    func login(req: Request) throws -> EventLoopFuture<String> {
-        let credentials = try req.content.decode(LoginCredentials.self)
-        return userService.login(username: credentials.username, password: credentials.password, on: req)
+    func login(req: Request) throws -> EventLoopFuture<LoginResponseDTO> {
+        let loginRequest = try req.content.decode(LoginRequestDTO.self)
+        let requestModel = LoginRequestModel(
+            username: loginRequest.username,
+            password: loginRequest.password
+        )
+        
+        return userService.login(loginRequest: requestModel, on: req).flatMap {response in
+            let responseDTO = LoginResponseDTO(accessToken: response.accessToken)
+            return req.eventLoop.makeSucceededFuture(responseDTO)
+        }
     }
     
     @Sendable
     func authenticate(req: Request) throws -> EventLoopFuture<UserDTO> {
-        let authRequest = try req.content.decode(AuthRequest.self)
-        return userService.authenticate(jwt: authRequest.token, on: req)
+        let authRequest = try req.content.decode(AuthRequestDTO.self)
+        return userService.authenticate(jwt: authRequest.accessToken, on: req)
     }
-}
-
-struct LoginCredentials: Content {
-    let username: String
-    let password: String
-}
-
-struct AuthRequest: Content {
-    let token: String
-}
-
-struct RegisterRequest: Content {
-    let username: String
-    let password: String
 }

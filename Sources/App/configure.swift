@@ -54,8 +54,10 @@ public func configure(_ app: Application) async throws {
     try protectedRoutes.register(collection: GameController(gameService: gameService))
     try protectedRoutes.register(collection: PlayerController(playerService: playerService))
     try protectedRoutes.register(collection: RoomController(roomService: roomService))
-    try protectedRoutes.register(collection: UserController(userService: userService))
     try protectedRoutes.register(collection: WordController(wordService: wordService))
+    
+    
+    try app.register(collection: UserController(userService: userService))
     
     try routes(app)
 }
