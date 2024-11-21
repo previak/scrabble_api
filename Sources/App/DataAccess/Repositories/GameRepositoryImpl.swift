@@ -1,4 +1,5 @@
 import Vapor
+import Fluent
 
 final class GameRepositoryImpl: GameRepository {
     func find(id: UUID, on req: Request) -> EventLoopFuture<Game?> {
@@ -20,5 +21,18 @@ final class GameRepositoryImpl: GameRepository {
             }
             return game.delete(on: req.db)
         }
+    }
+    
+    func deleteByRoomId(roomId: UUID, on req: Request) -> EventLoopFuture<Void> {
+        return Game.query(on: req.db)
+            .filter(\.$room.$id == roomId)
+            .all()
+            .flatMap { games in
+                let deleteFutures = games.map { game in
+                    return game.delete(on: req.db)
+                }
+                
+                return deleteFutures.flatten(on: req.eventLoop)
+            }
     }
 }

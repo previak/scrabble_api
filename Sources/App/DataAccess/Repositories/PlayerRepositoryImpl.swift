@@ -1,8 +1,21 @@
 import Vapor
+import Fluent
 
 final class PlayerRepositoryImpl: PlayerRepository {
     func find(id: UUID, on req: Request) -> EventLoopFuture<Player?> {
         return Player.find(id, on: req.db)
+    }
+    
+    func findByUserId(userId: UUID, on req: Request) -> EventLoopFuture<Player?> {
+        return Player.query(on: req.db)
+            .filter(\.$user.$id, .equal, userId)
+            .first()
+    }
+    
+    func findByRoomId(roomId: UUID, on req: Request) -> EventLoopFuture<[Player]> {
+        return Player.query(on: req.db)
+            .filter(\.$room.$id, .equal, roomId)
+            .all()
     }
     
     func create(createRequest: CreatePlayerRequest, on req: Request) -> EventLoopFuture<Player>{
