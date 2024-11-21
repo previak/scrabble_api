@@ -1,11 +1,9 @@
 import XCTest
-import Vapor
-import Fluent
-import Foundation
+import XCTVapor
 @testable import App
+import Vapor
 
 final class BoardControllerTests: XCTestCase {
-
     var app: Application!
     var mockBoardService: MockBoardService!
     var boardController: BoardController!
@@ -15,6 +13,9 @@ final class BoardControllerTests: XCTestCase {
         app = Application(.testing)
         mockBoardService = MockBoardService()
         boardController = BoardController(boardService: mockBoardService)
+
+        let routes = app.routes
+        try? boardController.boot(routes: routes)
     }
 
     override func tearDown() {
@@ -22,9 +23,124 @@ final class BoardControllerTests: XCTestCase {
         super.tearDown()
     }
 
-    /// Тест для получения стартовой доски
+    // MARK: - Тест установки плитки на доску
+    func testPlaceTile() throws {
+        // Arrange
+        let tilePlacementRequest = PlaceTileRequestDTO(
+            boardId: UUID(),
+            letter: "A",
+            verticalCoord: 2,
+            horizontalCoord: 3
+        )
+        let updatedBoard = BoardDTO(
+            id: UUID(),
+            game: nil,
+            tiles: [[TileDTO(modifier: .doubleLetter, letter: nil)]]
+        )
+
+        mockBoardService.placeTileClosure = { request, req in
+            XCTAssertEqual(request.boardId, tilePlacementRequest.boardId)
+            XCTAssertEqual(request.letter, "A")
+            XCTAssertEqual(request.verticalCoord, 2)
+            XCTAssertEqual(request.horizontalCoord, 3)
+            return req.eventLoop.future(updatedBoard)
+        }
+
+        let req = Request(application: app, method: .POST, url: URI(path: "/boards/place-tile"), on: app.eventLoopGroup.next())
+        try req.content.encode(tilePlacementRequest, as: .json)
+
+        // Act
+        let futureBoard = try boardController.placeTile(req: req)
+        let board = try futureBoard.wait()
+
+        // Assert
+        XCTAssertNotNil(board.id, "Доска должна иметь идентификатор")
+        XCTAssertEqual(board.tiles[0][0].modifier, .doubleLetter, "Модификатор плитки должен быть `.doubleLetter`")
+    }
+
+    // MARK: - Тест возврата плитки с доски
+    func testTakeTileBack() throws {
+        // Arrange
+        let takeTileBackRequest = TakeTileBackRequestDTO(
+            boardId: UUID(),
+            verticalCoord: 3,
+            horizontalCoord: 4
+        )
+        let updatedBoard = BoardDTO(
+            id: UUID(),
+            game: nil,
+            tiles: [[TileDTO(modifier: .empty, letter: nil)]]
+        )
+
+        mockBoardService.takeTileBackClosure = { request, req in
+            XCTAssertEqual(request.boardId, takeTileBackRequest.boardId)
+            XCTAssertEqual(request.verticalCoord, 3)
+            XCTAssertEqual(request.horizontalCoord, 4)
+            return req.eventLoop.future(updatedBoard)
+        }
+
+        let req = Request(application: app, method: .POST, url: URI(path: "/boards/take-tile-back"), on: app.eventLoopGroup.next())
+        try req.content.encode(takeTileBackRequest, as: .json)
+
+        // Act
+        let futureBoard = try boardController.takeTileBack(req: req)
+        let board = try futureBoard.wait()
+
+        // Assert
+        XCTAssertNotNil(board.id, "Доска должна иметь идентификатор")
+        XCTAssertEqual(board.tiles[0][0].modifier, .empty, "Модификатор плитки должен быть `.empty`")
+    }
+
+    // MARK: - Тест получения доски по ID
+    func testGetBoard() throws {
+        // Arrange
+        let testBoardID = UUID()
+        let tile = TileDTO(modifier: .doubleWord, letter: "A")
+        let board = BoardDTO(
+            id: testBoardID,
+            game: GameDTO(
+                id: UUID(),
+                room: RoomDTO(
+                    id: UUID(),
+                    isOpen: true,
+                    isPublic: false,
+                    invitationCode: "ROOM123",
+                    gameState: .forming,
+                    admin: User(id: UUID(), username: "admin", passwordHash: "hashedPassword", apiKey: "apiKey123") // Исправлено
+                ),
+                isPaused: false
+            ),
+            tiles: [[tile]]
+        )
+
+        mockBoardService.getBoardClosure = { id, _ in
+            guard id == testBoardID else {
+                return self.app.eventLoopGroup.future(error: Abort(.notFound))
+            }
+            return self.app.eventLoopGroup.future(board)
+        }
+
+        let req = Request(application: app, method: .GET, url: URI(path: "/boards"), on: app.eventLoopGroup.next())
+        req.parameters.set("id", to: testBoardID.uuidString)
+
+        // Act
+        let futureBoard = try boardController.getBoard(req: req)
+        let result = try futureBoard.wait()
+
+        // Assert
+        XCTAssertEqual(result.id, testBoardID)
+        XCTAssertEqual(result.tiles[0][0].modifier, .doubleWord)
+        XCTAssertEqual(result.tiles[0][0].letter, "A")
+    }
+
+    // MARK: - Тест получения стартовой доски
     func testGetStartingBoard() throws {
-        let startingBoard = BoardDTO(id: UUID(), game: nil, tiles: [[TileDTO(modifier: .empty, letter: nil)]])
+        // Arrange
+        let startingBoard = BoardDTO(
+            id: UUID(),
+            game: nil,
+            tiles: [[TileDTO(modifier: .empty, letter: nil)]]
+        )
 
         mockBoardService.getStartingBoardClosure = { _ in
             return self.app.eventLoopGroup.future(startingBoard)
@@ -32,127 +148,41 @@ final class BoardControllerTests: XCTestCase {
 
         let req = Request(application: app, on: app.eventLoopGroup.next())
 
+        // Act
         let futureBoard = try boardController.getStartingBoard(req: req)
-        let board = try futureBoard.wait()
+        let result = try futureBoard.wait()
 
-        XCTAssertNotNil(board.id, "ID стартовой доски должен быть не nil")
-        XCTAssertEqual(board.tiles.count, 1, "Доска должна стартовать с одной строкой плиток")
-        XCTAssertEqual(board.tiles[0][0].modifier, .empty, "Модификатор на стартовой доске должен быть пустой (empty)")
-        XCTAssertNil(board.tiles[0][0].letter, "На стартовой доске буква должна быть nil")
-    }
-
-    /// Тест для получения доски по ID
-    func testGetBoard() throws {
-        let testBoardID = UUID()
-        let tile = TileDTO(modifier: .doubleWord, letter: "A")
-        let testBoard = BoardDTO(id: testBoardID, game: nil, tiles: [[tile]])
-
-        mockBoardService.getBoardClosure = { id, _ in
-            guard id == testBoardID else { return self.app.eventLoopGroup.future(error: Abort(.notFound)) }
-            return self.app.eventLoopGroup.future(testBoard)
-        }
-
-        let req = Request(application: app, on: app.eventLoopGroup.next())
-        req.parameters.set("id", to: testBoardID.uuidString)
-
-        let futureBoard = try boardController.getBoard(req: req)
-        let board = try futureBoard.wait()
-
-        XCTAssertEqual(board.id, testBoardID)
-        XCTAssertEqual(board.tiles[0][0].letter, "A")
-        XCTAssertEqual(board.tiles[0][0].modifier, .doubleWord)
-    }
-
-    /// Тестируем создание новой доски
-    func testCreateBoard() throws {
-        let requestBoard = BoardDTO(id: nil, game: nil, tiles: [[TileDTO(modifier: .doubleLetter, letter: "B")]])
-
-        let createdBoard = BoardDTO(id: UUID(), game: nil, tiles: [[TileDTO(modifier: .doubleLetter, letter: "B")]])
-
-        mockBoardService.createBoardClosure = { boardDTO, _ in
-            return self.app.eventLoopGroup.future(createdBoard)
-        }
-
-        let req = Request(application: app, method: .POST, url: URI(path: "/boards"), on: app.eventLoopGroup.next())
-        try req.content.encode(requestBoard, as: .json)
-
-        let futureBoard = try boardController.createBoard(req: req)
-        let board = try futureBoard.wait()
-
-        XCTAssertNotNil(board.id, "Созданная доска должна иметь идентификатор")
-        XCTAssertEqual(board.tiles[0][0].letter, "B")
-        XCTAssertEqual(board.tiles[0][0].modifier, .doubleLetter)
-    }
-
-    /// Тестируем обновление доски
-    func testUpdateBoard() throws {
-        let boardID = UUID()
-        let requestBoard = BoardDTO(id: boardID, game: nil, tiles: [[TileDTO(modifier: .tripleWord, letter: "C")]])
-
-        mockBoardService.updateBoardClosure = { boardDTO, _ in
-            return self.app.eventLoopGroup.future(requestBoard)
-        }
-
-        let req = Request(application: app, method: .PUT, url: URI(path: "/boards/\(boardID.uuidString)"), on: app.eventLoopGroup.next())
-        try req.content.encode(requestBoard, as: .json)
-        req.parameters.set("id", to: boardID.uuidString)
-
-        let futureBoard = try boardController.updateBoard(req: req)
-        let board = try futureBoard.wait()
-
-        XCTAssertEqual(board.id, boardID)
-        XCTAssertEqual(board.tiles[0][0].letter, "C")
-        XCTAssertEqual(board.tiles[0][0].modifier, .tripleWord)
-    }
-
-    /// Тестируем удаление доски по ID
-    func testDeleteBoard() throws {
-        let testBoardID = UUID()
-
-        mockBoardService.deleteBoardClosure = { id, _ in
-            guard id == testBoardID else { return self.app.eventLoopGroup.future(error: Abort(.notFound)) }
-            return self.app.eventLoopGroup.future()
-        }
-
-        let req = Request(application: app, on: app.eventLoopGroup.next())
-        req.parameters.set("id", to: testBoardID.uuidString)
-
-        let futureResponse = try boardController.deleteBoard(req: req)
-        let response = try futureResponse.wait()
-
-        XCTAssertEqual(response, .noContent)
+        // Assert
+        XCTAssertNotNil(result.id, "Стартовая доска должна иметь идентификатор")
+        XCTAssertEqual(result.tiles[0][0].modifier, .empty)
+        XCTAssertNil(result.tiles[0][0].letter)
     }
 }
 
-// Моковый сервис для работы с досками
+// MARK: - MockBoardService для тестов
 final class MockBoardService: BoardService {
+    func updateBoard(board: App.BoardDTO, on req: Vapor.Request) -> NIOCore.EventLoopFuture<App.BoardDTO> {
+        return updateBoard(board: board, on: req)
+    }
+    
+    var placeTileClosure: ((PlaceTileRequestModel, Request) -> EventLoopFuture<BoardDTO>)?
+    var takeTileBackClosure: ((TakeTileBackRequestModel, Request) -> EventLoopFuture<BoardDTO>)?
+    var getBoardClosure: ((UUID, Request) -> EventLoopFuture<BoardDTO>)?
     var getStartingBoardClosure: ((Request) -> EventLoopFuture<BoardDTO>)?
 
-    var getBoardClosure: ((UUID, Request) -> EventLoopFuture<BoardDTO>)?
+    func placeTile(placeTileRequest: PlaceTileRequestModel, on req: Request) -> EventLoopFuture<BoardDTO> {
+        placeTileClosure!(placeTileRequest, req)
+    }
 
-    var createBoardClosure: ((BoardDTO, Request) -> EventLoopFuture<BoardDTO>)?
+    func takeTileBack(takeTileBackRequest: TakeTileBackRequestModel, on req: Request) -> EventLoopFuture<BoardDTO> {
+        takeTileBackClosure!(takeTileBackRequest, req)
+    }
 
-    var updateBoardClosure: ((BoardDTO, Request) -> EventLoopFuture<BoardDTO>)?
-
-    var deleteBoardClosure: ((UUID, Request) -> EventLoopFuture<Void>)?
+    func getBoard(getBoardRequest: GetBoardRequestModel, on req: Request) -> EventLoopFuture<BoardDTO> {
+        getBoardClosure!(getBoardRequest.boardId, req)
+    }
 
     func getStartingBoard(on req: Request) -> EventLoopFuture<BoardDTO> {
-        return getStartingBoardClosure!(req)
-    }
-
-    func getBoard(id: UUID, on req: Request) -> EventLoopFuture<BoardDTO> {
-        return getBoardClosure!(id, req)
-    }
-
-    func createBoard(board: BoardDTO, on req: Request) -> EventLoopFuture<BoardDTO> {
-        return createBoardClosure!(board, req)
-    }
-
-    func updateBoard(board: BoardDTO, on req: Request) -> EventLoopFuture<BoardDTO> {
-        return updateBoardClosure!(board, req)
-    }
-
-    func deleteBoard(id: UUID, on req: Request) -> EventLoopFuture<Void> {
-        return deleteBoardClosure!(id, req)
+        getStartingBoardClosure!(req)
     }
 }

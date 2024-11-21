@@ -16,8 +16,17 @@ final class PlayerServiceImpl: PlayerService {
         }
     }
     
+    func getPlayerTiles(id: UUID, on req: Request) -> EventLoopFuture<String> {
+        return playerRepository.find(id: id, on: req).flatMapThrowing { player in
+            guard let player = player else {
+                throw Abort(.notFound)
+            }
+            return player.availableLetters
+        }
+    }
+        
     func getPlayerScore(getPlayerScoreRequest: GetPlayerScoreRequestModel, on req: Request) -> EventLoopFuture<GetPlayerScoreResponseModel> {
-
+            
         let playerId = getPlayerScoreRequest.playerId
         
         return playerRepository.find(id: playerId, on: req).flatMapThrowing { player in
@@ -29,21 +38,21 @@ final class PlayerServiceImpl: PlayerService {
             return response
         }
     }
-    
+        
     func createPlayer(
         createRequest: CreatePlayerRequestModel,
         on req: Request) -> EventLoopFuture<PlayerDTO> {
-        let createPlayerRequest = CreatePlayerRequest(
-            userId: createRequest.userId,
-            roomId: createRequest.roomId,
-            nickname: createRequest.nickname)
+            let createPlayerRequest = CreatePlayerRequest(
+                userId: createRequest.userId,
+                roomId: createRequest.roomId,
+                nickname: createRequest.nickname)
             
-        return playerRepository.create(
-            createRequest: createPlayerRequest,
-            on: req
-        ).map { $0.toDTO() }
+            return playerRepository.create(
+                createRequest: createPlayerRequest,
+                on: req
+            ).map { $0.toDTO() }
     }
-    
+        
     func updatePlayer(player: PlayerDTO, on req: Request) -> EventLoopFuture<PlayerDTO> {
         let model = player.toModel()
         return playerRepository.update(player: model, on: req).map { $0.toDTO() }

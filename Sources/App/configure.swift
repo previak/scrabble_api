@@ -81,6 +81,7 @@ private func addMigrations(_ app: Application) throws {
     app.migrations.add(AddUserTable())
     app.migrations.add(AddPlayerTable())
     app.migrations.add(AddWordTable())
+    app.migrations.add(AddRemainingTilesColumn())
     
     try app.autoMigrate().wait()
 }

@@ -10,6 +10,13 @@ struct PlayerController: RouteCollection, Sendable {
     func boot(routes: RoutesBuilder) throws {
         let players = routes.grouped("players")
         
+        players.post("get-player-tiles", use: getPlayerTiles)
+            .openAPI(
+                summary: "Get player tiles",
+                description: "Get player tiles",
+                body: .type(UUID.self),
+                response: .type(GetPlayerTilesResponseDTO.self),
+                auth: .apiKey(), .bearer())
         players.get("score", use: getPlayerScore)
             .openAPI(
                 summary: "Get player's score",
@@ -34,5 +41,14 @@ struct PlayerController: RouteCollection, Sendable {
                     score: responseModel.score
                 )
             }
+    }
+    
+    @Sendable
+    func getPlayerTiles(req: Request) throws -> EventLoopFuture<GetPlayerTilesResponseDTO> {
+        guard let id = req.parameters.get("id", as: UUID.self) else {
+            throw Abort(.badRequest, reason: "Missing or invalid player ID.")
+        }
+        return playerService.getPlayerTiles(id: id, on: req).map{tiles in
+            GetPlayerTilesResponseDTO(availableLetters: tiles)}
     }
 }

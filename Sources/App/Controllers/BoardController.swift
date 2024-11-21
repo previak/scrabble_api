@@ -74,4 +74,9 @@ struct BoardController: RouteCollection, Sendable {
         
         return boardService.getBoard(getBoardRequest: getBoardRequest, on: req)
     }
+    
+    @Sendable
+    func getStartingBoard(req: Request) throws -> EventLoopFuture<BoardDTO> {
+        return boardService.getStartingBoard(on: req)
+    }
 }
