@@ -11,7 +11,7 @@ struct GameController: RouteCollection, Sendable {
     func boot(routes: RoutesBuilder) throws {
         let games = routes.grouped("games")
     
-        games.post("leave-game", use: leaveGame)
+        games.post("leave", use: leaveGame)
             .openAPI(
                 summary: "Leave game",
                 description: "Leave game",
