@@ -9,7 +9,7 @@ enum GameState: String, Codable {
 }
 
 
-final class Room: Model, @unchecked Sendable {
+final class Room: Model, Content, @unchecked Sendable {
     static let schema = "rooms"
     
     @ID(key: .id)

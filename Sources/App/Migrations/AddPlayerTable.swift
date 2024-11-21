@@ -10,6 +10,7 @@ struct AddPlayerTable: Migration {
             .field("score", .int, .required)
             .field("turn_order", .int, .required)
             .field("available_letters", .string, .required)
+            .unique(on: "user_id", "room_id")
             .create()
     }
     

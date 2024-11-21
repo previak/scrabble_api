@@ -9,6 +9,25 @@ final class RoomServiceImpl: RoomService {
         self.playerRepository = playerRepository
     }
     
+    func joinRoom(joinRequest: JoinRoomRequestModel, on req: Vapor.Request) -> EventLoopFuture<Void> {
+        return roomRepository.find(invitationCode: joinRequest.invitationCode, on: req).flatMapThrowing { room in
+            guard let room = room else {
+                throw Abort(.notFound, reason: "Room with invitation code \(joinRequest.invitationCode) not found.")
+            }
+            
+            let createPlayerRequest = CreatePlayerRequest(
+                userId: joinRequest.userId,
+                roomId: room.id!,
+                nickname: joinRequest.nickname
+            )
+            
+            _ = self.playerRepository.create(createRequest: createPlayerRequest, on: req)
+            return
+        }
+    }
+
+    
+    
     func getRoom(id: UUID, on req: Request) -> EventLoopFuture<RoomDTO> {
         return roomRepository.find(id: id, on: req).flatMapThrowing { room in
             guard let room = room else {

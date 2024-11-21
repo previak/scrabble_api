@@ -1,14 +1,25 @@
 import Vapor
 
+
 final class RoomRepositoryImpl: RoomRepository {
     func find(id: UUID, on req: Request) -> EventLoopFuture<Room?> {
         return Room.find(id, on: req.db)
     }
     
+    func find(invitationCode: String, on req: Request) -> EventLoopFuture<Room?> {
+        
+        let res = Room.query(on: req.db).all()
+        
+        return res.map { rooms in
+            rooms.first { $0.invitationCode == invitationCode }
+        }
+    }
+    
+
     func create(createRequest: CreateRoomRequest, on req: Request) -> EventLoopFuture<Room> {
         return User.find(createRequest.adminUserId, on: req.db).flatMap { adminOptional -> EventLoopFuture<Room> in
 
-            guard let admin = adminOptional else {
+            guard adminOptional != nil else {
                 return req.eventLoop.makeFailedFuture(
                     Abort(.notFound, reason: "Admin user not found")
                 )
