@@ -1,198 +1,155 @@
-/*import XCTest
-import Fluent
 import Vapor
-import Foundation
-
+import XCTVapor
 @testable import App
 
-final class RoomControllerTests: XCTestCase {
-    var app: Application!
-    var mockRoomService: MockRoomService!
-    var roomController: RoomController!
-    
-    override func setUp() {
-        super.setUp()
-        app = Application(.testing)
-        mockRoomService = MockRoomService()
-        roomController = RoomController(roomService: mockRoomService)
+// MockRoomService для изоляции RoomService
+final class MockRoomService: RoomService {
+    func getRoom(id: UUID, on req: Vapor.Request) -> NIOCore.EventLoopFuture<App.RoomDTO> {
+        return getRoom(id: id, on: req)
     }
     
-    override func tearDown() {
-        app.shutdown()
-        super.tearDown()
+    func updateRoom(room: App.RoomDTO, on req: Vapor.Request) -> NIOCore.EventLoopFuture<App.RoomDTO> {
+        return updateRoom(room: room, on: req)
     }
     
-    func testGetRoom() throws {
-        // Given: Создаем тестовые данные для комнаты и администратора
-        let testRoomID = UUID()
-        let testAdminID = UUID()
-        let testAdmin = User(id: testAdminID, username: "adminUser", passwordHash: "hashed_password", apiKey: "test_api_key")
-        let roomDTO = RoomDTO(
-            id: testRoomID,
-            isOpen: true,
-            isPublic: true,
-            invitationCode: "XYZ123",
-            gameState: .forming,
-            admin: testAdmin
-        )
-        
-        // Настройка мокового сервиса для имитации возврата данных
-        mockRoomService.getRoomClosure = { id, _ in
-            guard id == testRoomID else { return self.app.eventLoopGroup.future(error: Abort(.notFound)) }
-            return self.app.eventLoopGroup.future(roomDTO)
+    func deleteRoom(id: UUID, on req: Vapor.Request) -> NIOCore.EventLoopFuture<Void> {
+        return deleteRoom(id: id, on: req)
+    }
+    
+    var createRoomCalled = false
+    var joinRoomCalled = false
+    
+    var createRoomResponse: CreateRoomResponseModel?
+    var expectedError: Error?
+
+    func createRoom(createRequest: CreateRoomRequestModel, on req: Request) -> EventLoopFuture<CreateRoomResponseModel> {
+        createRoomCalled = true
+        if let error = expectedError {
+            return req.eventLoop.makeFailedFuture(error)
         }
-        
-        // Создаем запрос с параметром ID комнаты (строка)
-        let req = Request(application: app, on: app.eventLoopGroup.next())
-        req.parameters.set("id", to: testRoomID.uuidString)
-
-        // When: Выполняем запрос к контроллеру
-        let futureRoom = try roomController.getRoom(req: req)
-        let room = try futureRoom.wait()
-
-        // Then: Проверяем, правильно ли возвращены данные
-        XCTAssertEqual(room.id, testRoomID)
-        XCTAssertEqual(room.isOpen, true)
-        XCTAssertEqual(room.isPublic, true)
-        XCTAssertEqual(room.invitationCode, "XYZ123")
-        XCTAssertEqual(room.gameState, .forming)
-        XCTAssertEqual(room.admin.id, testAdminID)
-        XCTAssertEqual(room.admin.username, "adminUser")
+        if let response = createRoomResponse {
+            return req.eventLoop.makeSucceededFuture(response)
+        } else {
+            return req.eventLoop.makeFailedFuture(Abort(.internalServerError, reason: "No mock createRoomResponse provided"))
+        }
     }
+
+    func joinRoom(joinRequest: JoinRoomRequestModel, on req: Request) -> EventLoopFuture<Void> {
+        joinRoomCalled = true
+        if let error = expectedError {
+            return req.eventLoop.makeFailedFuture(error)
+        } else {
+            return req.eventLoop.makeSucceededFuture(())
+        }
+    }
+}
+
+// Тесты RoomController
+final class RoomControllerTests: XCTestCase {
     
     func testCreateRoom() throws {
-        // Given: Данные для создания комнаты
-        let createRoomRequest = CreateRoomRequestDTO(userId: UUID(), isOpen: true, isPublic: true, adminNickname: "AdminUser")
-        let createRoomResponse = CreateRoomResponseModel(adminUserId: UUID(), roomId: UUID(), invitationCode: "ABC123")
+        let app = Application(.testing)
+        defer { app.shutdown() }
         
-        // Настройка мокового сервиса для создания комнаты
-        mockRoomService.createRoomClosure = { createRequest, _ in
-            return self.app.eventLoopGroup.future(createRoomResponse)
-        }
-        
-        // Создание запросного объекта и тела запроса
-        let req = Request(
-            application: app,
-            method: .POST,
-            url: URI(path: "/rooms"),
-            on: app.eventLoopGroup.next()
+        let mockRoomService = MockRoomService()
+        let expectedResponse = CreateRoomResponseModel(
+            adminUserId: UUID(), roomId: UUID(),
+            invitationCode: "TEST_CODE"
         )
+        mockRoomService.createRoomResponse = expectedResponse
         
-        // Кодировку данных в тело запроса лучше всего делать через `req.content.encode`
-        try req.content.encode(createRoomRequest, as: .json)
+        let roomController = RoomController(roomService: mockRoomService)
+        try roomController.boot(routes: app.routes)
 
-        // When: Выполняем запрос к контроллеру
-        let futureResponse = try roomController.createRoom(req: req)
-        let response = try futureResponse.wait()
-
-        // Then: Проверяем, правильно ли возвращен ответ
-        XCTAssertEqual(response.invitationCode, "ABC123")
-        XCTAssertEqual(response.adminUserId, createRoomResponse.adminUserId)
-    }
-    
-    /*func testUpdateRoom() throws {
-        // Given: Данные для тестовой комнаты и администратора
-        let testRoomID = UUID()
-        let testAdminID = UUID()
-        let testAdmin = User(id: testAdminID, username: "updatedAdmin", passwordHash: "hashed_password", apiKey: "test_api_key")
-        let roomDTO = RoomDTO(
-            id: testRoomID,
+        let requestBody = CreateRoomRequestDTO(
+            userId: UUID(),
             isOpen: true,
-            isPublic: true,
-            invitationCode: "XYZ123",
-            gameState: .playing,
-            admin: testAdmin
-        )
-        
-        // Настройка мокового сервиса для обновления комнаты
-        mockRoomService.updateRoomClosure = { room, _ in
-            return self.app.eventLoopGroup.future(room)
-        }
-
-        // Создание запроса с телом
-        let req = Request(
-            application: app,
-            method: .PUT,
-            url: URI(path: "/rooms/\(testRoomID.uuidString)"), // Используем UUID как строку для URI
-            on: app.eventLoopGroup.next()
+            isPublic: false,
+            adminNickname: "TestAdmin"
         )
 
-        // Кодируем содержимое тела запроса
-        try req.content.encode(roomDTO, as: .json)
+        try app.test(.POST, "/rooms/create", beforeRequest: { req in
+            req.headers.contentType = .json
+            try req.content.encode(requestBody)
+        }, afterResponse: { res in
+            XCTAssertEqual(res.status, .ok, "Response status should be 200 OK")
+            XCTAssertTrue(mockRoomService.createRoomCalled, "createRoom should be called")
 
-        // When: Выполняем запрос к контроллеру
-        let futureResponse = try roomController.updateRoom(req: req)
-        let response = try futureResponse.wait()
-
-        // Then: Проверяем, что комната вернулась с правильными данными
-        XCTAssertEqual(response.id, testRoomID)
-        XCTAssertEqual(response.invitationCode, "XYZ123")
-        XCTAssertEqual(response.gameState, .playing)
-        XCTAssertEqual(response.admin.username, "updatedAdmin")
-        XCTAssertEqual(response.admin.id, testAdminID)
-    }*/
-
-    func testDeleteRoom() throws {
-        // Given: Идентификатор комнаты для удаления
-        let testRoomID = UUID()
+            let response = try res.content.decode(CreateRoomResponseDTO.self)
+            XCTAssertEqual(response.adminUserId, expectedResponse.adminUserId)
+            XCTAssertEqual(response.invitationCode, expectedResponse.invitationCode)
+        })
+    }
+    
+    func testJoinRoom() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
         
-        // Настройка мокового сервиса для удаления комнаты
-        mockRoomService.deleteRoomClosure = { id, _ in
-            guard id == testRoomID else { return self.app.eventLoopGroup.future(error: Abort(.notFound)) }
-            return self.app.eventLoopGroup.future()
-        }
+        let mockRoomService = MockRoomService()
+        let roomController = RoomController(roomService: mockRoomService)
+        try roomController.boot(routes: app.routes)
         
-        // Создание запроса с параметром ID (строка)
-        let req = Request(application: app, on: app.eventLoopGroup.next())
-        req.parameters.set("id", to: testRoomID.uuidString)
+        let requestBody = JoinRoomRequestDTO(
+            userId: UUID(),
+            invitationCode: "TEST_CODE",
+            nickname: "TestUser"
+        )
 
-        // When: Выполняем запрос на удаление
-        let futureResult = try roomController.deleteRoom(req: req)
-        let result = try futureResult.wait()
+        try app.test(.POST, "/rooms/join", beforeRequest: { req in
+            req.headers.contentType = .json
+            try req.content.encode(requestBody)
+        }, afterResponse: { res in
+            XCTAssertEqual(res.status, .ok, "Response status should be 200 OK")
+            XCTAssertTrue(mockRoomService.joinRoomCalled, "joinRoom should be called")
+        })
+    }
+    
+    func testCreateRoomErrorHandling() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+        
+        let mockRoomService = MockRoomService()
+        mockRoomService.expectedError = Abort(.badRequest, reason: "Invalid room configuration")
+        
+        let roomController = RoomController(roomService: mockRoomService)
+        try roomController.boot(routes: app.routes)
 
-        // Then: Проверяем успешное удаление (код 204)
-        XCTAssertEqual(result, .noContent)
+        let requestBody = CreateRoomRequestDTO(
+            userId: UUID(),
+            isOpen: true,
+            isPublic: false,
+            adminNickname: "TestAdmin"
+        )
+
+        try app.test(.POST, "/rooms/create", beforeRequest: { req in
+            req.headers.contentType = .json
+            try req.content.encode(requestBody)
+        }, afterResponse: { res in
+            XCTAssertEqual(res.status, .badRequest, "Response status should be 400 Bad Request")
+        })
+    }
+
+    func testJoinRoomErrorHandling() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+        
+        let mockRoomService = MockRoomService()
+        mockRoomService.expectedError = Abort(.notFound, reason: "Room not found")
+        
+        let roomController = RoomController(roomService: mockRoomService)
+        try roomController.boot(routes: app.routes)
+
+        let requestBody = JoinRoomRequestDTO(
+            userId: UUID(),
+            invitationCode: "INVALID_CODE",
+            nickname: "TestUser"
+        )
+
+        try app.test(.POST, "/rooms/join", beforeRequest: { req in
+            req.headers.contentType = .json
+            try req.content.encode(requestBody)
+        }, afterResponse: { res in
+            XCTAssertEqual(res.status, .notFound, "Response status should be 404 Not Found")
+        })
     }
 }
-
-// Мок-сервис для RoomService
-
-final class MockRoomService: RoomService {
-    func joinRoom(joinRequest: JoinRoomRequestModel, on req: Request) -> NIOCore.EventLoopFuture<Void> {
-        return joinRoom(joinRequest: joinRequest, on: req)
-    }
-    
-    // Closure для getRoom
-    var getRoomClosure: ((UUID, Request) -> EventLoopFuture<RoomDTO>)?
-    
-    // Closure для createRoom
-    var createRoomClosure: ((CreateRoomRequestModel, Request) -> EventLoopFuture<CreateRoomResponseModel>)?
-    
-    // Closure для updateRoom
-    var updateRoomClosure: ((RoomDTO, Request) -> EventLoopFuture<RoomDTO>)?
-    
-    // Closure для deleteRoom
-    var deleteRoomClosure: ((UUID, Request) -> EventLoopFuture<Void>)?
-    
-    // Реализация сервиса getRoom
-    func getRoom(id: UUID, on req: Request) -> EventLoopFuture<RoomDTO> {
-        return getRoomClosure!(id, req)
-    }
-    
-    // Реализация сервиса createRoom
-    func createRoom(createRequest: CreateRoomRequestModel, on req: Request) -> EventLoopFuture<CreateRoomResponseModel> {
-        return createRoomClosure!(createRequest, req)
-    }
-    
-    // Реализация сервиса updateRoom
-    func updateRoom(room: RoomDTO, on req: Request) -> EventLoopFuture<RoomDTO> {
-        return updateRoomClosure!(room, req)
-    }
-    
-    // Реализация сервиса deleteRoom
-    func deleteRoom(id: UUID, on req: Request) -> EventLoopFuture<Void> {
-        return deleteRoomClosure!(id, req)
-    }
-}
-
-*/
