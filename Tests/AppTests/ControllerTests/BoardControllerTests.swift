@@ -126,6 +126,14 @@ final class BoardControllerTests: XCTestCase {
 
 // Моковый сервис для работы с досками
 final class MockBoardService: BoardService {
+    func placeTile(placeTileRequest: App.PlaceTileRequestModel, on req: Vapor.Request) -> NIOCore.EventLoopFuture<App.BoardDTO> {
+        return placeTile(placeTileRequest: placeTileRequest, on: req)
+    }
+    
+    func takeTileBack(takeTileBackRequest: App.TakeTileBackRequestModel, on req: Vapor.Request) -> NIOCore.EventLoopFuture<App.BoardDTO> {
+        return takeTileBack(takeTileBackRequest: takeTileBackRequest, on: req)
+    }
+    
     var getStartingBoardClosure: ((Request) -> EventLoopFuture<BoardDTO>)?
 
     var getBoardClosure: ((UUID, Request) -> EventLoopFuture<BoardDTO>)?

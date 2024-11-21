@@ -5,6 +5,10 @@ import Foundation
 
 
 final class MockUserService: UserService {
+    func register(username: String, password: String, on req: Vapor.Request) -> NIOCore.EventLoopFuture<String> {
+        return register(username: username, password: password, on: req)
+    }
+    
     var getUserClosure: ((UUID, Request) -> EventLoopFuture<UserDTO>)?
     var createUserClosure: ((UserDTO, Request) -> EventLoopFuture<UserDTO>)?
     var updateUserClosure: ((UserDTO, Request) -> EventLoopFuture<UserDTO>)?
