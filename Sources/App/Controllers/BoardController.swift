@@ -19,6 +19,14 @@ struct BoardController: RouteCollection, Sendable {
                 response: .type(BoardDTO.self),
                 auth: .apiKey(), .bearer()
             )
+        boards.post("take-tile-back", use: takeTileBack)
+            .openAPI(
+                summary: "Take tile back",
+                description: "Take tile from the board back",
+                body: .type(TakeTileBackRequestDTO.self),
+                response: .type(BoardDTO.self),
+                auth: .apiKey(), .bearer()
+            )
         boards.get(":id", use: getBoard)
         boards.post(use: createBoard)
         boards.put(":id", use: updateBoard)
@@ -37,6 +45,19 @@ struct BoardController: RouteCollection, Sendable {
         )
         
         return boardService.placeTile(placeTileRequest: placeTileRequest, on: req)
+    }
+    
+    @Sendable
+    func takeTileBack(req: Request) throws -> EventLoopFuture<BoardDTO> {
+        let request = try req.content.decode(TakeTileBackRequestDTO.self)
+        
+        let takeTileBackRequest = TakeTileBackRequestModel(
+            boardId: request.boardId,
+            verticalCoord: request.verticalCoord,
+            horizontalCoord: request.horizontalCoord
+        )
+        
+        return boardService.takeTileBack(takeTileBackRequest: takeTileBackRequest, on: req)
     }
     
     @Sendable

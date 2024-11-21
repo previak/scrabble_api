@@ -29,6 +29,25 @@ final class BoardServiceImpl: BoardService {
         }
     }
     
+    func takeTileBack(takeTileBackRequest: TakeTileBackRequestModel, on req: Request) -> EventLoopFuture<BoardDTO> {
+            
+        let board = self.getBoard(id: takeTileBackRequest.boardId, on: req)
+        
+        return board.flatMap { board in
+            var mutableBoard = board
+
+            if mutableBoard.tiles[takeTileBackRequest.verticalCoord][takeTileBackRequest.horizontalCoord].letter != nil {
+                mutableBoard.tiles[takeTileBackRequest.verticalCoord][takeTileBackRequest.horizontalCoord].letter = nil
+            } else {
+                return req.eventLoop.makeFailedFuture(Abort(.badRequest, reason: "Tile is already empty"))
+            }
+            
+            return self.updateBoard(board: mutableBoard, on: req).map { updatedBoard in
+                return updatedBoard
+            }
+        }
+    }
+    
     func getStartingBoard(on req: Request) -> EventLoopFuture<BoardDTO> {
         return readBoardFromFile(on: req)
     }
