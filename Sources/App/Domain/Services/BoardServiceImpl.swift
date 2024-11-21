@@ -16,7 +16,7 @@ final class BoardServiceImpl: BoardService {
     
     func placeTile(placeTileRequest: PlaceTileRequestModel, on req: Request) -> EventLoopFuture<BoardDTO> {
         
-        let board = self.getBoard(id: placeTileRequest.boardId, on: req)
+        let board = self.getBoard(getBoardRequest: GetBoardRequestModel(boardId: placeTileRequest.boardId), on: req)
         
         return board.flatMap { board in
             var mutableBoard = board
@@ -31,7 +31,7 @@ final class BoardServiceImpl: BoardService {
     
     func takeTileBack(takeTileBackRequest: TakeTileBackRequestModel, on req: Request) -> EventLoopFuture<BoardDTO> {
             
-        let board = self.getBoard(id: takeTileBackRequest.boardId, on: req)
+        let board = self.getBoard(getBoardRequest: GetBoardRequestModel(boardId: takeTileBackRequest.boardId), on: req)
         
         return board.flatMap { board in
             var mutableBoard = board
@@ -52,27 +52,19 @@ final class BoardServiceImpl: BoardService {
         return readBoardFromFile(on: req)
     }
     
-    func getBoard(id: UUID, on req: Request) -> EventLoopFuture<BoardDTO> {
-            return boardRepository.find(id: id, on: req).flatMapThrowing { board in
+    func getBoard(getBoardRequest: GetBoardRequestModel, on req: Request) -> EventLoopFuture<BoardDTO> {
+        return boardRepository.find(id: getBoardRequest.boardId, on: req).flatMapThrowing {
+            board in
                 guard let board = board else {
                     throw Abort(.notFound)
                 }
                 return board.toDTO()!
             }
         }
-        
-    func createBoard(board: BoardDTO, on req: Request) -> EventLoopFuture<BoardDTO> {
-        let model = board.toModel()
-        return boardRepository.create(board: model, on: req).map { $0.toDTO()! }
-    }
-        
+ 
     func updateBoard(board: BoardDTO, on req: Request) -> EventLoopFuture<BoardDTO> {
         let model = board.toModel()
         return boardRepository.update(board: model, on: req).map { $0.toDTO()! }
-    }
-        
-    func deleteBoard(id: UUID, on req: Request) -> EventLoopFuture<Void> {
-        return boardRepository.delete(id: id, on: req)
     }
     
     private func readBoardFromFile(on req: Request) -> EventLoopFuture<BoardDTO> {

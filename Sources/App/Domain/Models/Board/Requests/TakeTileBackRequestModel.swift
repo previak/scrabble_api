@@ -1,9 +1,9 @@
 import Foundation
 
-final class TakeTileBackRequestModel {
-    var boardId: UUID
-    var verticalCoord: Int
-    var horizontalCoord: Int
+final class TakeTileBackRequestModel: Sendable {
+    let boardId: UUID
+    let verticalCoord: Int
+    let horizontalCoord: Int
     
     init (boardId: UUID, verticalCoord: Int, horizontalCoord: Int) {
         self.boardId = boardId

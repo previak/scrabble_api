@@ -3,7 +3,7 @@ import JWT
 
 struct JWTMiddleware: AsyncMiddleware {
     func respond(to request: Vapor.Request, chainingTo next: any Vapor.AsyncResponder) async throws -> Vapor.Response {
-        guard let bearerToken = request.headers.bearerAuthorization else {
+        guard request.headers.bearerAuthorization != nil else {
             return await request.errorResponse(
                 status: .unauthorized,
                 message: "Missing authorization header."
