@@ -27,10 +27,14 @@ struct BoardController: RouteCollection, Sendable {
                 response: .type(BoardDTO.self),
                 auth: .apiKey(), .bearer()
             )
-        boards.get(":id", use: getBoard)
-        boards.post(use: createBoard)
-        boards.put(":id", use: updateBoard)
-        boards.delete(":id", use: deleteBoard)
+        boards.get(use: getBoard)
+            .openAPI(
+                summary: "Get board",
+                description: "Get board by it's Id",
+                body: .type(GetBoardRequestDTO.self),
+                response: .type(BoardDTO.self),
+                auth: .apiKey(), .bearer()
+            )
     }
     
     @Sendable
@@ -62,33 +66,12 @@ struct BoardController: RouteCollection, Sendable {
     
     @Sendable
     func getBoard(req: Request) throws -> EventLoopFuture<BoardDTO> {
-        guard let id = req.parameters.get("id", as: UUID.self) else {
-            throw Abort(.badRequest, reason: "Missing or invalid board ID.")
-        }
-        return boardService.getBoard(id: id, on: req)
-    }
-    
-    @Sendable
-    func createBoard(req: Request) throws -> EventLoopFuture<BoardDTO> {
-        let board = try req.content.decode(BoardDTO.self)
-        return boardService.createBoard(board: board, on: req)
-    }
-    
-    @Sendable
-    func updateBoard(req: Request) throws -> EventLoopFuture<BoardDTO> {
-        guard let id = req.parameters.get("id", as: UUID.self) else {
-            throw Abort(.badRequest, reason: "Missing or invalid board ID.")
-        }
-        var board = try req.content.decode(BoardDTO.self)
-        board.id = id
-        return boardService.updateBoard(board: board, on: req)
-    }
-    
-    @Sendable
-    func deleteBoard(req: Request) throws -> EventLoopFuture<HTTPStatus> {
-        guard let id = req.parameters.get("id", as: UUID.self) else {
-            throw Abort(.badRequest, reason: "Missing or invalid board ID.")
-        }
-        return boardService.deleteBoard(id: id, on: req).transform(to: .noContent)
+        let request = try req.content.decode(GetBoardRequestDTO.self)
+        
+        let getBoardRequest = GetBoardRequestModel(
+            boardId: request.boardId
+        )
+        
+        return boardService.getBoard(getBoardRequest: getBoardRequest, on: req)
     }
 }
