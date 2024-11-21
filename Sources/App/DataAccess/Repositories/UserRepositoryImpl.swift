@@ -1,4 +1,5 @@
 import Vapor
+import Fluent
 
 final class UserRepositoryImpl: UserRepository {
     func findById(id: UUID, on req: Request) -> EventLoopFuture<User?> {

@@ -14,6 +14,21 @@ final class BoardServiceImpl: BoardService {
             self.boardRepository = boardRepository
     }
     
+    func placeTile(placeTileRequest: PlaceTileRequestModel, on req: Request) -> EventLoopFuture<BoardDTO> {
+        
+        let board = self.getBoard(id: placeTileRequest.boardId, on: req)
+        
+        return board.flatMap { board in
+            var mutableBoard = board
+            
+            mutableBoard.tiles[placeTileRequest.verticalCoord][placeTileRequest.horizontalCoord].letter = placeTileRequest.letter
+            
+            return self.updateBoard(board: mutableBoard, on: req).map { updatedBoard in
+                return updatedBoard
+            }
+        }
+    }
+    
     func getStartingBoard(on req: Request) -> EventLoopFuture<BoardDTO> {
         return readBoardFromFile(on: req)
     }

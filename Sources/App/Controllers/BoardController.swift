@@ -11,10 +11,32 @@ struct BoardController: RouteCollection, Sendable {
     func boot(routes: RoutesBuilder) throws {
         let boards = routes.grouped("boards")
         
+        boards.post("place-tile", use: placeTile)
+            .openAPI(
+                summary: "Place tile",
+                description: "Place tile on a board",
+                body: .type(PlaceTileRequestDTO.self),
+                response: .type(BoardDTO.self),
+                auth: .apiKey(), .bearer()
+            )
         boards.get(":id", use: getBoard)
         boards.post(use: createBoard)
         boards.put(":id", use: updateBoard)
         boards.delete(":id", use: deleteBoard)
+    }
+    
+    @Sendable
+    func placeTile(req: Request) throws -> EventLoopFuture<BoardDTO> {
+        let request = try req.content.decode(PlaceTileRequestDTO.self)
+        
+        let placeTileRequest = PlaceTileRequestModel(
+            boardId: request.boardId,
+            letter: request.letter,
+            verticalCoord: request.verticalCoord,
+            horizontalCoord: request.horizontalCoord
+        )
+        
+        return boardService.placeTile(placeTileRequest: placeTileRequest, on: req)
     }
     
     @Sendable
