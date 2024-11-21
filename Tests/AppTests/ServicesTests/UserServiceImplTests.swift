@@ -1,131 +1,176 @@
 import XCTest
-@testable import App
 import Vapor
-import Crypto
+@testable import App
 
-// MARK: - Mock UserRepository
-final class MockUserRepository: UserRepository {
-    var users: [UUID: User] = [:]
-    var usersByUsername: [String: User] = [:]
 
-    func findById(id: UUID, on req: Request) -> EventLoopFuture<User?> {
-        return req.eventLoop.makeSucceededFuture(users[id])
+struct LoginCredentials: Content {
+    let username: String
+    let password: String
+}
+struct RegisterRequestModel: Content {
+    let username: String
+    let password: String
+}
+
+
+// MARK: - Mock UserService
+final class MockUserService: UserService {
+    func register(registerRequest: App.RegisterRequestModel, on req: Vapor.Request) -> NIOCore.EventLoopFuture<App.RegisterResponseModel> {
+        return register(registerRequest: registerRequest, on: req)
+    }
+    
+    func login(loginRequest: App.LoginRequestModel, on req: Vapor.Request) -> NIOCore.EventLoopFuture<App.LoginResponseModel> {
+        return login(loginRequest: loginRequest, on: req)
+    }
+    
+    var registerClosure: ((RegisterRequestModel, Request) -> EventLoopFuture<RegisterResponseDTO>)?
+    var loginClosure: ((String, String, Request) -> EventLoopFuture<LoginResponseDTO>)?
+
+    func register(registerRequest: RegisterRequestModel, on req: Request) -> EventLoopFuture<RegisterResponseDTO> {
+        return registerClosure!(registerRequest, req)
     }
 
-    func findByUsername(username: String, on req: Request) -> EventLoopFuture<User?> {
-        return req.eventLoop.makeSucceededFuture(usersByUsername[username])
+    func login(username: String, password: String, on req: Request) -> EventLoopFuture<LoginResponseDTO> {
+        return loginClosure!(username, password, req)
     }
 
-    func create(user: User, on req: Request) -> EventLoopFuture<User> {
-        users[user.id!] = user
-        usersByUsername[user.username] = user
-        return req.eventLoop.makeSucceededFuture(user)
+    // Остальные заглушки для методов сервиса
+    var getUserClosure: ((UUID, Request) -> EventLoopFuture<UserDTO>)?
+    var createUserClosure: ((UserDTO, Request) -> EventLoopFuture<UserDTO>)?
+    var updateUserClosure: ((UserDTO, Request) -> EventLoopFuture<UserDTO>)?
+    var deleteUserClosure: ((UUID, Request) -> EventLoopFuture<Void>)?
+    var authenticateClosure: ((String, Request) -> EventLoopFuture<UserDTO>)?
+
+    func getUser(id: UUID, on req: Request) -> EventLoopFuture<UserDTO> {
+        return getUserClosure!(id, req)
     }
 
-    func update(user: User, on req: Request) -> EventLoopFuture<User> {
-        users[user.id!] = user
-        return req.eventLoop.makeSucceededFuture(user)
+    func createUser(user: UserDTO, on req: Request) -> EventLoopFuture<UserDTO> {
+        return createUserClosure!(user, req)
     }
 
-    func delete(id: UUID, on req: Request) -> EventLoopFuture<Void> {
-        if let user = users[id] {
-            users.removeValue(forKey: id)
-            usersByUsername.removeValue(forKey: user.username)
-        }
-        return req.eventLoop.makeSucceededFuture(())
+    func updateUser(user: UserDTO, on req: Request) -> EventLoopFuture<UserDTO> {
+        return updateUserClosure!(user, req)
+    }
+
+    func deleteUser(id: UUID, on req: Request) -> EventLoopFuture<Void> {
+        return deleteUserClosure!(id, req)
+    }
+
+    func authenticate(jwt: String, on req: Request) -> EventLoopFuture<UserDTO> {
+        return authenticateClosure!(jwt, req)
     }
 }
 
-// MARK: - Test Class
-final class UserServiceImplTests: XCTestCase {
-    private var app: Application!
-    private var mockUserRepository: MockUserRepository!
-    private var userService: UserServiceImpl!
+// MARK: - UserControllerTests
+final class UserControllerTests: XCTestCase {
+    var app: Application!
+    var mockUserService: MockUserService!
+    var userController: UserController!
 
     override func setUp() {
         super.setUp()
         app = Application(.testing)
-        mockUserRepository = MockUserRepository()
-        userService = UserServiceImpl(userRepository: mockUserRepository)
+        mockUserService = MockUserService()
+        userController = UserController(userService: mockUserService)
     }
 
     override func tearDown() {
-        mockUserRepository = nil
-        userService = nil
         app.shutdown()
         super.tearDown()
     }
 
-    // MARK: - Test Cases
+    /// Тест успешной регистрации
+    func testRegisterUserSuccess() throws {
+        // Создаем запрос и ожидаемый ответ
+        let registerRequest = RegisterRequestModel(username: "newuser", password: "securePassword123")
+        let expectedResponse = RegisterResponseDTO(accessToken: "sample_access_token", apiKey: "sample_api_key")
 
-    /// Успешная регистрация пользователя
-    func testRegisterUser_Success() throws {
-        let req = Request(application: app, on: app.eventLoopGroup.next())
+        // Настраиваем мок-сервис
+        mockUserService.registerClosure = { request, req in
+            XCTAssertEqual(request.username, "newuser")
+            XCTAssertEqual(request.password, "securePassword123")
+            return req.eventLoop.future(expectedResponse)
+        }
 
-        // Генерируем хэш пароля
-        let hashedPassword = try Bcrypt.hash("password")
+        // Подготавливаем HTTP запрос
+        let req = Request(application: app, method: .POST, url: URI(string: "/auth/register"), on: app.eventLoopGroup.next())
+        try req.content.encode(registerRequest, as: .json) // Кодируем RegisterRequestModel как JSON
 
-        let futureResult = userService.register(username: "testuser", password: hashedPassword, on: req)
-        let token = try futureResult.wait()
+        // Вызываем метод контроллера
+        let futureResponse = try userController.register(req: req)
+        let response = try futureResponse.wait()
 
-        XCTAssertNotNil(token)
-        XCTAssertEqual(mockUserRepository.usersByUsername["testuser"]?.username, "testuser")
+        // Проверяем результат
+        XCTAssertEqual(response.accessToken, expectedResponse.accessToken)
+        XCTAssertEqual(response.apiKey, expectedResponse.apiKey)
     }
 
-    /// Ошибка регистрации: пользователь уже существует
-    func testRegisterUser_UsernameAlreadyExists() throws {
-        let req = Request(application: app, on: app.eventLoopGroup.next())
+    /// Тест успешного входа (логин)
+    func testLoginUserSuccess() throws {
+        let loginCredentials = LoginCredentials(username: "loginuser", password: "correct_password")
+        let expectedResponse = LoginResponseDTO(accessToken: "valid_access_token")
 
-        let existingUser = User(id: UUID(), username: "testuser", passwordHash: try Bcrypt.hash("oldpassword"), apiKey: "apiKey")
-        mockUserRepository.usersByUsername["testuser"] = existingUser
+        // Настраиваем мок-сервис
+        mockUserService.loginClosure = { username, password, req in
+            XCTAssertEqual(username, "loginuser")
+            XCTAssertEqual(password, "correct_password")
+            return req.eventLoop.future(expectedResponse)
+        }
 
-        let futureResult = userService.register(username: "testuser", password: "password", on: req)
+        // Подготавливаем HTTP запрос
+        let req = Request(application: app, method: .POST, url: URI(string: "/auth/login"), on: app.eventLoopGroup.next())
+        try req.content.encode(loginCredentials, as: .json)
 
-        XCTAssertThrowsError(try futureResult.wait()) { error in
+        // Вызываем метод контроллера
+        let futureResponse = try userController.login(req: req)
+        let response = try futureResponse.wait()
+
+        // Проверяем результат
+        XCTAssertEqual(response.accessToken, expectedResponse.accessToken)
+    }
+
+    /// Тест неудачного входа (логин)
+    func testLoginUserFailure_InvalidCredentials() throws {
+        let loginCredentials = LoginCredentials(username: "loginuser", password: "wrong_password")
+
+        // Настраиваем мок-сервис для отказа в логине
+        mockUserService.loginClosure = { username, password, req in
+            return req.eventLoop.future(error: Abort(.unauthorized))
+        }
+
+        // Подготавливаем HTTP запрос
+        let req = Request(application: app, method: .POST, url: URI(string: "/auth/login"), on: app.eventLoopGroup.next())
+        try req.content.encode(loginCredentials, as: .json)
+
+        // Вызываем метод контроллера и проверяем, что произошла ошибка
+        XCTAssertThrowsError(try userController.login(req: req).wait()) { error in
+            XCTAssertTrue(error is Abort)
+            XCTAssertEqual((error as? Abort)?.status, .unauthorized)
+        }
+    }
+
+    /// Тест неудачной регистрации (пользователь уже существует)
+    func testRegisterUserFailure_UserAlreadyExists() throws {
+        let registerRequest = RegisterRequestModel(username: "existinguser", password: "securePassword123")
+
+        // Настраиваем мок-сервис для возвращения ошибки
+        mockUserService.registerClosure = { request, req in
+            guard request.username != "existinguser" else {
+                return req.eventLoop.future(error: Abort(.conflict, reason: "User already exists"))
+            }
+            return req.eventLoop.future(RegisterResponseDTO(accessToken: "sample_access_token", apiKey: "sample_api_key"))
+        }
+
+        // Подготавливаем HTTP запрос
+        let req = Request(application: app, method: .POST, url: URI(string: "/auth/register"), on: app.eventLoopGroup.next())
+        try req.content.encode(registerRequest, as: .json)
+
+        // Проверяем, что произошла ошибка при вызове метода контроллера
+        XCTAssertThrowsError(try userController.register(req: req).wait()) { error in
             XCTAssertTrue(error is Abort)
             XCTAssertEqual((error as? Abort)?.status, .conflict)
         }
     }
-
-    /// Успешный вход (логин)
-    func testLogin_Success() throws {
-        let req = Request(application: app, on: app.eventLoopGroup.next())
-
-        let passwordHash = try Bcrypt.hash("password")
-        let user = User(id: UUID(), username: "testuser", passwordHash: passwordHash, apiKey: "apiKey")
-        mockUserRepository.usersByUsername["testuser"] = user
-
-        let futureResult = userService.login(username: "testuser", password: "password", on: req)
-        let token = try futureResult.wait()
-
-        XCTAssertNotNil(token)
-    }
-
-    /// Ошибка входа: неправильный пароль
-    func testLogin_InvalidPassword() throws {
-        let req = Request(application: app, on: app.eventLoopGroup.next())
-
-        let passwordHash = try Bcrypt.hash("password")
-        let user = User(id: UUID(), username: "testuser", passwordHash: passwordHash, apiKey: "apiKey")
-        mockUserRepository.usersByUsername["testuser"] = user
-
-        let futureResult = userService.login(username: "testuser", password: "wrongpassword", on: req)
-
-        XCTAssertThrowsError(try futureResult.wait()) { error in
-            XCTAssertTrue(error is Abort)
-            XCTAssertEqual((error as? Abort)?.status, .unauthorized)
-        }
-    }
-
-    /// Ошибка входа: пользователь не найден
-    func testLogin_UserNotFound() throws {
-        let req = Request(application: app, on: app.eventLoopGroup.next())
-
-        let futureResult = userService.login(username: "unknownuser", password: "password", on: req)
-
-        XCTAssertThrowsError(try futureResult.wait()) { error in
-            XCTAssertTrue(error is Abort)
-            XCTAssertEqual((error as? Abort)?.status, .unauthorized)
-        }
-    }
 }
+
