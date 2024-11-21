@@ -11,10 +11,6 @@ struct UserController: RouteCollection {
         let protectedRoutes = routes.grouped(APIKeyMiddleware())
         let protectedUsers = protectedRoutes.grouped("users")
         let auth = routes.grouped("auth")
-    
-        protectedUsers.get("users", ":id", use: getUser)
-        protectedUsers.put("users", ":id", use: updateUser)
-        protectedUsers.delete("users", ":id", use: deleteUser)
         
         
         auth.post("register", use: register)

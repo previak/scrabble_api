@@ -16,6 +16,20 @@ final class PlayerServiceImpl: PlayerService {
         }
     }
     
+    func getPlayerScore(getPlayerScoreRequest: GetPlayerScoreRequestModel, on req: Request) -> EventLoopFuture<GetPlayerScoreResponseModel> {
+
+        let playerId = getPlayerScoreRequest.playerId
+        
+        return playerRepository.find(id: playerId, on: req).flatMapThrowing { player in
+            guard let player = player else {
+                throw Abort(.notFound)
+            }
+            
+            let response = GetPlayerScoreResponseModel(score: player.score)
+            return response
+        }
+    }
+    
     func createPlayer(
         createRequest: CreatePlayerRequestModel,
         on req: Request) -> EventLoopFuture<PlayerDTO> {

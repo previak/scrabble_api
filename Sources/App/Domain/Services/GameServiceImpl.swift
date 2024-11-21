@@ -25,8 +25,4 @@ final class GameServiceImpl: GameService {
         let model = game.toModel()
         return gameRepository.update(game: model, on: req).map { $0.toDTO() }
     }
-    
-    func deleteGame(id: UUID, on req: Request) -> EventLoopFuture<Void> {
-        return gameRepository.delete(id: id, on: req)
-    }
 }
