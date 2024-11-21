@@ -13,6 +13,14 @@ struct PlayerController: RouteCollection, Sendable {
         players.get(":id", use: getPlayer)
         players.put(":id", use: updatePlayer)
         players.delete(":id", use: deletePlayer)
+        players.get("score", use: getPlayerScore)
+            .openAPI(
+                summary: "Get player's score",
+                description: "Get player's score by his Id",
+                body: .type(GetPlayerScoreRequestDTO.self),
+                response: .type(GetPlayerScoreResponseDTO.self),
+                auth: .apiKey(), .bearer()
+            )
     }
     
     @Sendable
@@ -21,6 +29,22 @@ struct PlayerController: RouteCollection, Sendable {
             throw Abort(.badRequest, reason: "Missing or invalid player ID.")
         }
         return playerService.getPlayer(id: id, on: req)
+    }
+    
+    @Sendable
+    func getPlayerScore(req: Request) throws -> EventLoopFuture<GetPlayerScoreResponseDTO> {
+        let request = try req.content.decode(GetPlayerScoreRequestDTO.self)
+
+        let getPlayerScoreRequest = GetPlayerScoreRequestModel(
+            playerId: request.playerId
+        )
+        
+        return playerService.getPlayerScore(getPlayerScoreRequest: getPlayerScoreRequest, on: req)
+            .map { responseModel in
+                GetPlayerScoreResponseDTO(
+                    score: responseModel.score
+                )
+            }
     }
     
     @Sendable
