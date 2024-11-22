@@ -35,7 +35,7 @@ public func configure(_ app: Application) async throws {
     let wordService = WordServiceImpl(wordRepository: wordRepository)
     
     try app.register(collection: BoardController(boardService: boardService))
-    try app.register(collection: GameController(gameService: gameService))
+    try app.register(collection: GameController(gameService: gameService, userService: userService))
     try app.register(collection: PlayerController(playerService: playerService))
     try app.register(collection: RoomController(roomService: roomService))
     try app.register(collection: UserController(userService: userService))
@@ -51,7 +51,7 @@ public func configure(_ app: Application) async throws {
 
     let protectedRoutes = app.grouped(APIKeyMiddleware())
     try protectedRoutes.register(collection: BoardController(boardService: boardService))
-    try protectedRoutes.register(collection: GameController(gameService: gameService))
+    try protectedRoutes.register(collection: GameController(gameService: gameService, userService: userService))
     try protectedRoutes.register(collection: PlayerController(playerService: playerService))
     try protectedRoutes.register(collection: RoomController(roomService: roomService))
     try protectedRoutes.register(collection: WordController(wordService: wordService))
