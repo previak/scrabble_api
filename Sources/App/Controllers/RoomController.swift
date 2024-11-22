@@ -10,7 +10,6 @@ struct RoomController: RouteCollection, Sendable {
     
     func boot(routes: RoutesBuilder) throws {
         let rooms = routes.grouped("rooms")
-        
         rooms.post("create", use: createRoom)
             .openAPI(
                 summary: "Create room",
@@ -25,6 +24,14 @@ struct RoomController: RouteCollection, Sendable {
                 description: "Join an existing room using the provided invitation code",
                 body: .type(JoinRoomRequestDTO.self),
                 response: .type(Response.self),
+                auth: .apiKey(), .bearer()
+            )
+        
+        rooms.get("list", use: getPublicRooms)
+            .openAPI(
+                summary: "Rooms list",
+                description: "Get list of all public rooms",
+                response: .type(GetRoomsListResponseDTO.self),
                 auth: .apiKey(), .bearer()
             )
     }
@@ -62,6 +69,17 @@ struct RoomController: RouteCollection, Sendable {
         
         return roomService.joinRoom(joinRequest: joinRoomRequest, on: req).map{_ in
             return Response(statusCode: HTTPResponseStatus.ok)
+        }
+    }
+    
+    @Sendable
+    func getPublicRooms(req: Request) throws -> EventLoopFuture<GetRoomsListResponseDTO> {
+        return roomService.getPublicRooms(on: req).flatMap{response in
+            let responseDTO = GetRoomsListResponseDTO(rooms: response.rooms.map{ model in
+                RoomInfoDTO(invitationCode: model.invitationCode, players: model.players)
+            })
+            
+            return req.eventLoop.makeSucceededFuture(responseDTO)
         }
     }
 }

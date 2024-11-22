@@ -5,4 +5,5 @@ protocol GameService: Sendable {
     func createGame(game: GameDTO, on req: Request) -> EventLoopFuture<GameDTO>
     func updateGame(game: GameDTO, on req: Request) -> EventLoopFuture<GameDTO>
     func playerDrawTiles(drawTilesRequest: DrawPlayerTilesRequestModel, on req: Request) -> EventLoopFuture<String>
+    func leaveGame(leaveGameRequest: LeaveGameRequestModel, on req: Request) -> EventLoopFuture<LeaveGameResponseModel>
 }

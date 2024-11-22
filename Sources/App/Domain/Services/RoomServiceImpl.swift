@@ -1,4 +1,5 @@
 import Vapor
+import Fluent
 
 final class RoomServiceImpl: RoomService {
     private let roomRepository: RoomRepository
@@ -38,7 +39,6 @@ final class RoomServiceImpl: RoomService {
     }
     
     func createRoom(createRequest: CreateRoomRequestModel, on req: Request) -> EventLoopFuture<CreateRoomResponseModel> {
-        // Step 1: Create the room
         let roomRepositoryRequest = CreateRoomRequest(
             adminUserId: createRequest.userId,
             isOpen: createRequest.isOpen,
@@ -66,6 +66,31 @@ final class RoomServiceImpl: RoomService {
                 }
             }
         }
+    }
+    
+    func getPublicRooms(on: Request) -> EventLoopFuture<GetRoomsListResponseModel> {
+        return Room
+            .query(on: on.db)
+            .filter(\.$isPublic == true)
+            .all()
+            .flatMap { rooms in
+                let roomInfoFutures = rooms.map { room in
+                    self.getRoomMemberCount(roomId: room.id!, on: on.db).map { memberCount in
+                        RoomInfoModel(invitationCode: room.invitationCode, players: memberCount)
+                    }
+                }
+
+                return roomInfoFutures.flatten(on: on.eventLoop).map { roomInfoModels in
+                    GetRoomsListResponseModel(rooms: roomInfoModels)
+                }
+            }
+    }
+
+    private func getRoomMemberCount(roomId: UUID, on: Database) -> EventLoopFuture<Int> {
+        return Player
+            .query(on: on)
+            .filter(\Player.$room.$id == roomId)
+            .count()
     }
 
 

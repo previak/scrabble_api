@@ -28,7 +28,7 @@ public func configure(_ app: Application) async throws {
     let wordRepository = WordRepositoryImpl()
     
     let boardService = BoardServiceImpl(boardRepository: boardRepository)
-    let gameService = GameServiceImpl(gameRepository: gameRepository)
+    let gameService = GameServiceImpl(gameRepository: gameRepository, playerRepository: playerRepository, roomRepository: roomRepository)
     let playerService = PlayerServiceImpl(playerRepository: playerRepository)
     let roomService = RoomServiceImpl(roomRepository: roomRepository, playerRepository: playerRepository)
     let userService = UserServiceImpl(userRepository: userRepository)

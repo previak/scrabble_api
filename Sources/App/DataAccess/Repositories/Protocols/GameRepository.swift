@@ -5,4 +5,5 @@ protocol GameRepository: Sendable {
     func create(game: Game, on req: Request) -> EventLoopFuture<Game>
     func update(game: Game, on req: Request) -> EventLoopFuture<Game>
     func delete(id: UUID, on req: Request) -> EventLoopFuture<Void>
+    func deleteByRoomId(roomId: UUID, on req: Request) -> EventLoopFuture<Void>
 }

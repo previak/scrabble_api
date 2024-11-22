@@ -1,4 +1,5 @@
 import Vapor
+import VaporToOpenAPI
 
 struct GameController: RouteCollection, Sendable {
     private let gameService: GameService
@@ -18,6 +19,15 @@ struct GameController: RouteCollection, Sendable {
                 response: .type(String.self),
                 auth: .apiKey(), .bearer()
             )
+        
+        games.post("leave", use: leaveGame)
+            .openAPI(
+                summary: "Leave game",
+                description: "Leave game",
+                body: .type(LeaveGameRequestDTO.self),
+                response: .type(LeaveGameResponseDTO.self),
+                auth: .apiKey(), .bearer()
+            )
     }
 
     @Sendable
@@ -31,6 +41,23 @@ struct GameController: RouteCollection, Sendable {
         )
         
         return gameService.playerDrawTiles(drawTilesRequest: drawTilesRequest, on: req)
+    }
+    
+    @Sendable
+    func leaveGame(req: Request) throws -> EventLoopFuture<LeaveGameResponseDTO> {
+        let request = try req.content.decode(LeaveGameRequestDTO.self)
+        
+        let leaveGameRequest = LeaveGameRequestModel(
+            userId: request.userId
+        )
+        
+        return gameService
+            .leaveGame(leaveGameRequest: leaveGameRequest, on: req)
+            .map { responseModel in
+                LeaveGameResponseDTO(
+                    playerCount: responseModel.playerCount
+                )
+            }
     }
     
     

@@ -6,4 +6,5 @@ protocol RoomService: Sendable {
     func updateRoom(room: RoomDTO, on req: Request) -> EventLoopFuture<RoomDTO>
     func deleteRoom(id: UUID, on req: Request) -> EventLoopFuture<Void>
     func joinRoom(joinRequest: JoinRoomRequestModel, on req: Request) -> EventLoopFuture<Void>
+    func getPublicRooms(on req: Request) -> EventLoopFuture<GetRoomsListResponseModel>
 }
