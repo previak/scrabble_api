@@ -6,5 +6,5 @@ protocol PlayerService: Sendable {
     func createPlayer(createRequest: CreatePlayerRequestModel, on req: Request) -> EventLoopFuture<PlayerDTO>
     func updatePlayer(player: PlayerDTO, on req: Request) -> EventLoopFuture<PlayerDTO>
     func deletePlayer(id: UUID, on req: Request) -> EventLoopFuture<Void>
-    func getPlayerTiles(id: UUID, on req: Request) -> EventLoopFuture<String>
+    func getPlayerTiles(getPlayerTilesRequest: GetPlayerTilesRequestModel, on req: Request) -> EventLoopFuture<GetPlayerTilesResponseModel>
 }

@@ -16,12 +16,12 @@ final class PlayerServiceImpl: PlayerService {
         }
     }
     
-    func getPlayerTiles(id: UUID, on req: Request) -> EventLoopFuture<String> {
-        return playerRepository.find(id: id, on: req).flatMapThrowing { player in
+    func getPlayerTiles(getPlayerTilesRequest: GetPlayerTilesRequestModel, on req: Request) -> EventLoopFuture<GetPlayerTilesResponseModel> {
+        return playerRepository.find(id: getPlayerTilesRequest.playerId, on: req).flatMapThrowing { player in
             guard let player = player else {
                 throw Abort(.notFound)
             }
-            return player.availableLetters
+            return GetPlayerTilesResponseModel(availableLetters: player.availableLetters)
         }
     }
         

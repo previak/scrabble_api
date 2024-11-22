@@ -11,7 +11,7 @@ struct BoardController: RouteCollection, Sendable {
     func boot(routes: RoutesBuilder) throws {
         let boards = routes.grouped("boards")
         
-        boards.post("place-tile", use: placeTile)
+        boards.post("tile", "place", use: placeTile)
             .openAPI(
                 summary: "Place tile",
                 description: "Place tile on a board",
@@ -19,7 +19,7 @@ struct BoardController: RouteCollection, Sendable {
                 response: .type(BoardDTO.self),
                 auth: .apiKey(), .bearer()
             )
-        boards.post("take-tile-back", use: takeTileBack)
+        boards.post("tile", "take-back", use: takeTileBack)
             .openAPI(
                 summary: "Take tile back",
                 description: "Take tile from the board back",
@@ -27,7 +27,7 @@ struct BoardController: RouteCollection, Sendable {
                 response: .type(BoardDTO.self),
                 auth: .apiKey(), .bearer()
             )
-        boards.get(use: getBoard)
+        boards.post(use: getBoard)
             .openAPI(
                 summary: "Get board",
                 description: "Get board by it's Id",

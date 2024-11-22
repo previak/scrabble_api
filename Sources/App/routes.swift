@@ -8,6 +8,7 @@ func routes(_ app: Application) throws {
       req.application.routes.openAPI(
         info: InfoObject(
           title: "Scrabble API",
+          description: "Custom API for Scrabble game implementation",
           version: "0.0.1"
         )
       )
