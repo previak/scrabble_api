@@ -1,9 +1,9 @@
 import Foundation
 
 final class StartGameRequestModel: Sendable {
-    let roomId: UUID
+    let userId: UUID
     
-    init (roomId: UUID) {
-        self.roomId = roomId
+    init (userId: UUID) {
+        self.userId = userId
     }
 }

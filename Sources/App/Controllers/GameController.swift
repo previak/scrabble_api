@@ -34,7 +34,6 @@ struct GameController: RouteCollection, Sendable {
             .openAPI(
                 summary: "Start game",
                 description: "Start game",
-                body: .type(StartGameRequestDTO.self),
                 response: .type(Response.self),
                 auth: .apiKey(), .bearer()
             )
@@ -86,16 +85,21 @@ struct GameController: RouteCollection, Sendable {
     
     @Sendable
     func startGame(req: Request) throws -> EventLoopFuture<Response> {
-        let request = try req.content.decode(StartGameRequestDTO.self)
         
-        let startGameRequest = StartGameRequestModel(
-            roomId: request.roomId
-        )
-        
-        return gameService
-            .startGame(startGameRequest: startGameRequest, on: req)
-            .map{_ in
-                return Response(statusCode: HTTPResponseStatus.ok)
-            }
+        let authHeader = req.headers.bearerAuthorization!
+        let token = authHeader.token
+    
+        return userService.authenticate(jwt: token, on: req).flatMap { user in
+            let startGameRequest = StartGameRequestModel(
+                userId: user.id!
+            )
+            
+            
+            return gameService
+                .startGame(startGameRequest: startGameRequest, on: req)
+                .map{_ in
+                    return Response(statusCode: HTTPResponseStatus.ok)
+                }
+        }
     }
 }
