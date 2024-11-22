@@ -30,7 +30,6 @@ final class Board: Model, @unchecked Sendable {
         guard let tilesArray = self.getTiles() else { return nil }
         return BoardDTO(
             id: self.id,
-            game: self.game.toDTO(),
             tiles: tilesArray
         )
     }

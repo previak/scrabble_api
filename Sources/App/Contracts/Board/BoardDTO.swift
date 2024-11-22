@@ -3,16 +3,12 @@ import Vapor
 
 struct BoardDTO: Content, Sendable {
     var id: UUID?
-    var game: GameDTO?
     var tiles: [[TileDTO]]
     
     func toModel() -> Board {
         let model = Board()
         
         model.id = self.id
-        if let game = game {
-            model.game = game.toModel()
-        }
         
         if let tiles = tilesToJSONString(tiles: tiles) {
             model.tiles = tiles
