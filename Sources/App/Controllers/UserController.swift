@@ -9,7 +9,7 @@ struct UserController: RouteCollection {
     
     func boot(routes: RoutesBuilder) throws {
         let protectedRoutes = routes.grouped(APIKeyMiddleware())
-        let protectedUsers = protectedRoutes.grouped("users")
+        _ = protectedRoutes.grouped("users")
         let auth = routes.grouped("auth")
         
         
