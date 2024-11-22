@@ -4,6 +4,10 @@ import Vapor
 
 // MARK: - Mock Test Player Repository
 final class MockTestPlayerRepository: PlayerRepository {
+    func findByNicknameAndRoomId(nickname: String, roomId: UUID, on req: Vapor.Request) -> NIOCore.EventLoopFuture<App.Player?> {
+        return findByNicknameAndRoomId(nickname: nickname, roomId: UUID(), on: req)
+    }
+    
     func findByUserId(userId: UUID, on req: Vapor.Request) -> NIOCore.EventLoopFuture<App.Player?> {
         return findByUserId(userId: UUID(), on: req)
     }
