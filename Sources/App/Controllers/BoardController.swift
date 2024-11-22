@@ -3,9 +3,11 @@ import VaporToOpenAPI
 
 struct BoardController: RouteCollection, Sendable {
     private let boardService: BoardService
+    private let userService: UserService
     
-    init(boardService: BoardService) {
+    init(boardService: BoardService, userService: UserService) {
         self.boardService = boardService
+        self.userService = userService
     }
     
     func boot(routes: RoutesBuilder) throws {
@@ -27,11 +29,10 @@ struct BoardController: RouteCollection, Sendable {
                 response: .type(BoardDTO.self),
                 auth: .apiKey(), .bearer()
             )
-        boards.post(use: getBoard)
+        boards.get(use: getBoard)
             .openAPI(
                 summary: "Get board",
                 description: "Get board by it's Id",
-                body: .type(GetBoardRequestDTO.self),
                 response: .type(BoardDTO.self),
                 auth: .apiKey(), .bearer()
             )
@@ -41,38 +42,51 @@ struct BoardController: RouteCollection, Sendable {
     func placeTile(req: Request) throws -> EventLoopFuture<BoardDTO> {
         let request = try req.content.decode(PlaceTileRequestDTO.self)
         
-        let placeTileRequest = PlaceTileRequestModel(
-            boardId: request.boardId,
-            letter: request.letter,
-            verticalCoord: request.verticalCoord,
-            horizontalCoord: request.horizontalCoord
-        )
+        let authHeader = req.headers.bearerAuthorization!
+        let token = authHeader.token
         
-        return boardService.placeTile(placeTileRequest: placeTileRequest, on: req)
+        return userService.authenticate(jwt: token, on: req).flatMap { user in
+            let placeTileRequest = PlaceTileRequestModel(
+                userId: user.id!,
+                letter: request.letter,
+                verticalCoord: request.verticalCoord,
+                horizontalCoord: request.horizontalCoord
+            )
+            
+            return boardService.placeTile(placeTileRequest: placeTileRequest, on: req)
+        }
     }
     
     @Sendable
     func takeTileBack(req: Request) throws -> EventLoopFuture<BoardDTO> {
         let request = try req.content.decode(TakeTileBackRequestDTO.self)
         
-        let takeTileBackRequest = TakeTileBackRequestModel(
-            boardId: request.boardId,
-            verticalCoord: request.verticalCoord,
-            horizontalCoord: request.horizontalCoord
-        )
+        let authHeader = req.headers.bearerAuthorization!
+        let token = authHeader.token
         
-        return boardService.takeTileBack(takeTileBackRequest: takeTileBackRequest, on: req)
+        return userService.authenticate(jwt: token, on: req).flatMap { user in
+            let takeTileBackRequest = TakeTileBackRequestModel(
+                userId: user.id!,
+                verticalCoord: request.verticalCoord,
+                horizontalCoord: request.horizontalCoord
+            )
+            
+            return boardService.takeTileBack(takeTileBackRequest: takeTileBackRequest, on: req)
+        }
     }
     
     @Sendable
     func getBoard(req: Request) throws -> EventLoopFuture<BoardDTO> {
-        let request = try req.content.decode(GetBoardRequestDTO.self)
+        let authHeader = req.headers.bearerAuthorization!
+        let token = authHeader.token
         
-        let getBoardRequest = GetBoardRequestModel(
-            boardId: request.boardId
-        )
-        
-        return boardService.getBoard(getBoardRequest: getBoardRequest, on: req)
+        return userService.authenticate(jwt: token, on: req).flatMap { user in
+            let getBoardRequest = GetBoardRequestModel(
+                userId: user.id!
+            )
+            
+            return boardService.getBoard(getBoardRequest: getBoardRequest, on: req)
+        }
     }
     
     @Sendable

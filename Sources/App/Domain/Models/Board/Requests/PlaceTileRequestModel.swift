@@ -1,13 +1,13 @@
 import Foundation
 
 final class PlaceTileRequestModel: Sendable {
-    let boardId: UUID
+    let userId: UUID
     let letter: String
     let verticalCoord: Int
     let horizontalCoord: Int
     
-    init (boardId: UUID, letter: String, verticalCoord: Int, horizontalCoord: Int) {
-        self.boardId = boardId
+    init (userId: UUID, letter: String, verticalCoord: Int, horizontalCoord: Int) {
+        self.userId = userId
         self.letter = letter
         self.verticalCoord = verticalCoord
         self.horizontalCoord = horizontalCoord

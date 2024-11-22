@@ -27,17 +27,17 @@ public func configure(_ app: Application) async throws {
     let userRepository = UserRepositoryImpl()
     let wordRepository = WordRepositoryImpl()
     
-    let boardService = BoardServiceImpl(boardRepository: boardRepository)
+    let boardService = BoardServiceImpl(boardRepository: boardRepository, playerRepository: playerRepository, roomRepository: roomRepository, gameRepository: gameRepository)
     let gameService = GameServiceImpl(gameRepository: gameRepository, playerRepository: playerRepository, roomRepository: roomRepository)
     let playerService = PlayerServiceImpl(playerRepository: playerRepository)
     let roomService = RoomServiceImpl(roomRepository: roomRepository, playerRepository: playerRepository)
     let userService = UserServiceImpl(userRepository: userRepository)
     let wordService = WordServiceImpl(wordRepository: wordRepository)
     
-    try app.register(collection: BoardController(boardService: boardService))
-    try app.register(collection: GameController(gameService: gameService))
-    try app.register(collection: PlayerController(playerService: playerService))
-    try app.register(collection: RoomController(roomService: roomService))
+    try app.register(collection: BoardController(boardService: boardService, userService: userService))
+    try app.register(collection: GameController(gameService: gameService, userService: userService))
+    try app.register(collection: PlayerController(playerService: playerService, userService: userService))
+    try app.register(collection: RoomController(roomService: roomService, userService: userService))
     try app.register(collection: UserController(userService: userService))
     try app.register(collection: WordController(wordService: wordService))
     
@@ -50,10 +50,10 @@ public func configure(_ app: Application) async throws {
     )
 
     let protectedRoutes = app.grouped(APIKeyMiddleware())
-    try protectedRoutes.register(collection: BoardController(boardService: boardService))
-    try protectedRoutes.register(collection: GameController(gameService: gameService))
-    try protectedRoutes.register(collection: PlayerController(playerService: playerService))
-    try protectedRoutes.register(collection: RoomController(roomService: roomService))
+    try protectedRoutes.register(collection: BoardController(boardService: boardService, userService: userService))
+    try protectedRoutes.register(collection: GameController(gameService: gameService, userService: userService))
+    try protectedRoutes.register(collection: PlayerController(playerService: playerService, userService: userService))
+    try protectedRoutes.register(collection: RoomController(roomService: roomService, userService: userService))
     try protectedRoutes.register(collection: WordController(wordService: wordService))
     
     

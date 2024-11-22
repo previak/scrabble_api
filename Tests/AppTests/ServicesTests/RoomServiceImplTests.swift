@@ -1,5 +1,5 @@
 import XCTest
-@testable import App // Подставьте имя вашего модуля
+@testable import App
 import Vapor
 
 // MARK: - Mock RoomRepository
@@ -21,7 +21,7 @@ final class MockRoomRepository: RoomRepository {
             id: UUID(),
             isOpen: createRequest.isOpen,
             isPublic: createRequest.isPublic,
-            invitationCode: UUID().uuidString, // Уникальный код приглашения
+            invitationCode: UUID().uuidString,
             gameState: .forming,
             adminId: createRequest.adminUserId
         )
@@ -42,6 +42,14 @@ final class MockRoomRepository: RoomRepository {
 
 // MARK: - Mock PlayerRepository
 final class MockPlayerRepository: PlayerRepository {
+    func findByUserId(userId: UUID, on req: Vapor.Request) -> NIOCore.EventLoopFuture<App.Player?> {
+        return findByUserId(userId: UUID(), on: req)
+    }
+    
+    func findByRoomId(roomId: UUID, on req: Vapor.Request) -> NIOCore.EventLoopFuture<[App.Player]> {
+        return findByRoomId(roomId: UUID(), on: req)
+    }
+    
     var players: [UUID: Player] = [:]
     
     func find(id: UUID, on req: Request) -> EventLoopFuture<Player?> {
@@ -54,9 +62,9 @@ final class MockPlayerRepository: PlayerRepository {
             userID: createRequest.userId,
             roomID: createRequest.roomId,
             nickname: createRequest.nickname,
-            score: 0,                                     // Начальный счёт
-            turnOrder: 1,                                 // Порядок хода
-            availableLetters: ["A", "B", "C"].joined(separator: ",") // Начальные буквы
+            score: 0,
+            turnOrder: 1,
+            availableLetters: ["A", "B", "C"].joined(separator: ",")
         )
         players[player.id!] = player
         return req.eventLoop.makeSucceededFuture(player)

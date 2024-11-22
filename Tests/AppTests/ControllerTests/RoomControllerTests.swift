@@ -2,8 +2,12 @@ import Vapor
 import XCTVapor
 @testable import App
 
-// MockRoomService для изоляции RoomService
+
 final class MockRoomService: RoomService {
+    func getPublicRooms(on req: Vapor.Request) -> NIOCore.EventLoopFuture<App.GetRoomsListResponseModel> {
+        return getPublicRooms(on: req)
+    }
+    
     func getRoom(id: UUID, on req: Vapor.Request) -> NIOCore.EventLoopFuture<App.RoomDTO> {
         return getRoom(id: id, on: req)
     }
@@ -44,7 +48,7 @@ final class MockRoomService: RoomService {
     }
 }
 
-// Тесты RoomController
+
 final class RoomControllerTests: XCTestCase {
     
     func testCreateRoom() throws {

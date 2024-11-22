@@ -1,13 +1,11 @@
 import Foundation
 
 final class DrawPlayerTilesRequestModel : Sendable {
-    let playerId: UUID
-    let gameId: UUID
+    let userId: UUID
     let letterCount: Int
     
-    init (gameId: UUID, playerId: UUID, letterCount: Int) {
-        self.gameId = gameId
-        self.playerId = playerId
+    init (userId: UUID, letterCount: Int) {
+        self.userId = userId
         self.letterCount = letterCount
     }
 }

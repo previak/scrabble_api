@@ -17,7 +17,7 @@ final class PlayerServiceImpl: PlayerService {
     }
     
     func getPlayerTiles(getPlayerTilesRequest: GetPlayerTilesRequestModel, on req: Request) -> EventLoopFuture<GetPlayerTilesResponseModel> {
-        return playerRepository.find(id: getPlayerTilesRequest.playerId, on: req).flatMapThrowing { player in
+        return playerRepository.findByUserId(userId: getPlayerTilesRequest.userId, on: req).flatMapThrowing { player in
             guard let player = player else {
                 throw Abort(.notFound)
             }
@@ -26,10 +26,8 @@ final class PlayerServiceImpl: PlayerService {
     }
         
     func getPlayerScore(getPlayerScoreRequest: GetPlayerScoreRequestModel, on req: Request) -> EventLoopFuture<GetPlayerScoreResponseModel> {
-            
-        let playerId = getPlayerScoreRequest.playerId
         
-        return playerRepository.find(id: playerId, on: req).flatMapThrowing { player in
+        return playerRepository.findByUserId(userId: getPlayerScoreRequest.userId, on: req).flatMapThrowing { player in
             guard let player = player else {
                 throw Abort(.notFound)
             }

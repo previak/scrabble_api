@@ -3,7 +3,6 @@ import Vapor
 import XCTest
 @testable import App
 
-// Mock UserService для тестов
 final class MockUserServiceCon: UserService {
     func getUser(id: UUID, on req: Vapor.Request) -> NIOCore.EventLoopFuture<App.UserDTO> {
         return getUser(id: id, on: req)
@@ -71,7 +70,6 @@ final class MockUserServiceCon: UserService {
     }
 }
 
-// Тесты для UserController
 final class UserControllerTests: XCTestCase {
     func testRegister() throws {
         let app = Application(.testing)

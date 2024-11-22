@@ -54,7 +54,6 @@ final class WordServiceImplTests: XCTestCase {
         let gameId = UUID()
         let playerId = UUID()
 
-        // Создаем объект слова
         let word = Word(
             id: wordId,
             gameId: gameId,
@@ -96,7 +95,7 @@ final class WordServiceImplTests: XCTestCase {
     func testCreateWord_Success() throws {
         let wordDTO = WordDTO(
             id: nil,
-            game: GameDTO(id: UUID(), room: RoomDTO(id: UUID(), isOpen: true, isPublic: false, invitationCode: "INV123", gameState: .forming, admin: User(id: UUID(), username: "Admin", passwordHash: "hashed", apiKey: "apikey123")), isPaused: false),
+            game: GameDTO(id: UUID(), room: RoomDTO(id: UUID(), isOpen: true, isPublic: false, invitationCode: "INV123", gameState: .forming, admin: User(id: UUID(), username: "Admin", passwordHash: "hashed", apiKey: "apikey123")), isPaused: false, remainingLetters: "wef"),
             player: PlayerDTO(id: UUID(), user: UserDTO(id: UUID(), username: "JohnDoe", passwordHash: "hashedPwd", apiKey: "playerApiKey"), room: RoomDTO(id: UUID(), isOpen: true, isPublic: false, invitationCode: "ROOM123", gameState: .forming, admin: User(id: UUID(), username: "Admin", passwordHash: "hashed", apiKey: "adminApiKey")), nickname: "PlayerOne", score: 50, turnOrder: 1, availableLetters: "A,B,C"),
             word: "CREATE",
             startRow: 3,
@@ -123,8 +122,7 @@ final class WordServiceImplTests: XCTestCase {
         let gameId = UUID()
         let playerId = UUID()
 
-        // Оригинальное слово
-        let originalWord = Word(
+               let originalWord = Word(
             id: wordId,
             gameId: gameId,
             playerId: playerId,
@@ -136,10 +134,9 @@ final class WordServiceImplTests: XCTestCase {
 
         mockWordRepository.words[wordId] = originalWord
 
-        // DTO для обновления
         let updatedWordDTO = WordDTO(
             id: wordId,
-            game: GameDTO(id: gameId, room: RoomDTO(id: UUID(), isOpen: true, isPublic: false, invitationCode: "ROOM456", gameState: .playing, admin: User(id: UUID(), username: "Admin", passwordHash: "hashedPwd", apiKey: "api456")), isPaused: true),
+            game: GameDTO(id: gameId, room: RoomDTO(id: UUID(), isOpen: true, isPublic: false, invitationCode: "ROOM456", gameState: .playing, admin: User(id: UUID(), username: "Admin", passwordHash: "hashedPwd", apiKey: "api456")), isPaused: true, remainingLetters: "kwer"),
             player: PlayerDTO(id: playerId, user: UserDTO(id: UUID(), username: "JaneDoe", passwordHash: "hashedPwd2", apiKey: "playerApi2"), room: RoomDTO(id: UUID(), isOpen: false, isPublic: true, invitationCode: "ROOMXYZ", gameState: .forming, admin: User(id: UUID(), username: "Admin", passwordHash: "hashed", apiKey: "apiAdminKeyPreUpdated")), nickname: "PlayerTwo", score: 60, turnOrder: 2, availableLetters: "X,Y,Z"),
             word: "UPDATED",
             startRow: 6,
@@ -149,7 +146,6 @@ final class WordServiceImplTests: XCTestCase {
 
         let req = Request(application: app, on: app.eventLoopGroup.next())
 
-        // Обновляем слово через сервис
         let futureResult = wordService.updateWord(word: updatedWordDTO, on: req)
         let result = try futureResult.wait()
 
@@ -178,11 +174,10 @@ final class WordServiceImplTests: XCTestCase {
 
         let req = Request(application: app, on: app.eventLoopGroup.next())
 
-        // Удаляем слово через сервис
         let futureResult = wordService.deleteWord(id: wordId, on: req)
         try futureResult.wait()
 
-        XCTAssertNil(mockWordRepository.words[wordId]) // Убеждаемся, что слово удалено из репозитория
+        XCTAssertNil(mockWordRepository.words[wordId]) 
     }
 }
 

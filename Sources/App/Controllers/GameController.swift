@@ -3,9 +3,11 @@ import VaporToOpenAPI
 
 struct GameController: RouteCollection, Sendable {
     private let gameService: GameService
+    private let userService: UserService
     
-    init(gameService: GameService) {
+    init(gameService: GameService, userService: UserService) {
         self.gameService = gameService
+        self.userService = userService
     }
     
     func boot(routes: RoutesBuilder) throws {
@@ -24,7 +26,6 @@ struct GameController: RouteCollection, Sendable {
             .openAPI(
                 summary: "Leave game",
                 description: "Leave game",
-                body: .type(LeaveGameRequestDTO.self),
                 response: .type(LeaveGameResponseDTO.self),
                 auth: .apiKey(), .bearer()
             )
@@ -44,36 +45,43 @@ struct GameController: RouteCollection, Sendable {
     func playerDrawTiles(req: Request) throws -> EventLoopFuture<DrawPlayerTilesResponseDTO> {
         let request = try req.content.decode(DrawPlayerTilesRequestDTO.self)
         
-        let drawTilesRequest = DrawPlayerTilesRequestModel(
-            gameId: request.gameId,
-            playerId: request.playerId,
-            letterCount: request.letterCount
-        )
+        let authHeader = req.headers.bearerAuthorization!
+        let token = authHeader.token
         
-        return gameService
-            .playerDrawTiles(drawTilesRequest: drawTilesRequest, on: req)
-            .map { responseModel in
-                DrawPlayerTilesResponseDTO(
-                    tiles: responseModel.tiles
-                )
-            }
+        return userService.authenticate(jwt: token, on: req).flatMap { user in
+            let drawTilesRequest = DrawPlayerTilesRequestModel(
+                userId: user.id!,
+                letterCount: request.letterCount
+            )
+            
+            return gameService
+                .playerDrawTiles(drawTilesRequest: drawTilesRequest, on: req)
+                .map { responseModel in
+                    DrawPlayerTilesResponseDTO(
+                        tiles: responseModel.tiles
+                    )
+                }
+        }
     }
     
     @Sendable
     func leaveGame(req: Request) throws -> EventLoopFuture<LeaveGameResponseDTO> {
-        let request = try req.content.decode(LeaveGameRequestDTO.self)
+        let authHeader = req.headers.bearerAuthorization!
+        let token = authHeader.token
         
-        let leaveGameRequest = LeaveGameRequestModel(
-            userId: request.userId
-        )
-        
-        return gameService
-            .leaveGame(leaveGameRequest: leaveGameRequest, on: req)
-            .map { responseModel in
-                LeaveGameResponseDTO(
-                    playerCount: responseModel.playerCount
-                )
-            }
+        return userService.authenticate(jwt: token, on: req).flatMap { user in
+            let leaveGameRequest = LeaveGameRequestModel(
+                userId: user.id!
+            )
+            
+            return gameService
+                .leaveGame(leaveGameRequest: leaveGameRequest, on: req)
+                .map { responseModel in
+                    LeaveGameResponseDTO(
+                        playerCount: responseModel.playerCount
+                    )
+                }
+        }
     }
     
     @Sendable

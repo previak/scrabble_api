@@ -1,10 +1,10 @@
 import Foundation
 
 final class GetBoardRequestModel {
-    var boardId: UUID
+    var userId: UUID
     
-    init (boardId: UUID) {
-        self.boardId = boardId
+    init (userId: UUID) {
+        self.userId = userId
     }
 }
 

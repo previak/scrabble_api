@@ -44,7 +44,6 @@ final class BoardServiceTests: XCTestCase {
     override func setUp() {
         super.setUp()
 
-        // Создание тестового приложения
         app = Application(.testing)
         mockBoardRepository = MockBoardRepository()
         boardService = BoardServiceImpl(boardRepository: mockBoardRepository)
@@ -61,43 +60,36 @@ final class BoardServiceTests: XCTestCase {
 
     // Тест успешного добавления плитки
     func testPlaceTileSuccessfully() throws {
-        // Уникальный ID доски
         let boardId = UUID()
 
-        // Создаём стартовую доску
         let initialBoard = BoardDTO(
             tiles: Array(
                 repeating: Array(repeating: TileDTO(modifier: .empty, letter: nil), count: 15),
                 count: 15
             )
         )
-        // Сохраняем доску в репозитории
+
         mockBoardRepository.boards[boardId] = initialBoard
 
-        // Создаём объект Request
         let req = Request(application: app, on: app.eventLoopGroup.next())
 
-        // Создаём запрос для размещения плитки
         let placeTileRequest = PlaceTileRequestModel(
-            boardId: boardId,    // Сначала ID доски
-            letter: "A",         // Затем буква
-            verticalCoord: 7,    // Координата по вертикали
-            horizontalCoord: 7   // Координата по горизонтали
+            boardId: boardId,
+            letter: "A",
+            verticalCoord: 7,
+            horizontalCoord: 7
         )
 
-        // Основное выполнение
         let futureResult = boardService.placeTile(placeTileRequest: placeTileRequest, on: req)
         let result = try futureResult.wait()
 
-        // Отладочный вывод результата (если что-то идёт не так)
         print("Tile after placement: \(result.tiles[7][7])")
         
-        // Проверяем, что буква добавлена в нужное место
         XCTAssertEqual(result.tiles[7][7].letter, "A")
 
-        // Убедимся, что модификатор не изменился
         XCTAssertEqual(result.tiles[7][7].modifier, .empty)
     }
+    
 
     // Тест добавления на клетку с модификатором
     func testPlaceTileOnModifiedTile() throws {
@@ -106,7 +98,7 @@ final class BoardServiceTests: XCTestCase {
             repeating: Array(repeating: TileDTO(modifier: .empty, letter: nil), count: 15),
             count: 15
         )
-        // Указываем специальный модификатор для клетки
+
         tiles[7][7] = TileDTO(modifier: .doubleLetter, letter: nil)
 
         let initialBoard = BoardDTO(tiles: tiles)
@@ -124,7 +116,6 @@ final class BoardServiceTests: XCTestCase {
         let futureResult = boardService.placeTile(placeTileRequest: placeTileRequest, on: req)
         let result = try futureResult.wait()
 
-        // Отладочный вывод результата
         print("Tile after placement: \(result.tiles[7][7])")
 
         XCTAssertEqual(result.tiles[7][7].letter, "B")

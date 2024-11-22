@@ -31,28 +31,36 @@ final class GameServiceImpl: GameService {
         return gameRepository.update(game: model, on: req).map { $0.toDTO() }
     }
     
-    func playerDrawTiles(drawTilesRequest: DrawPlayerTilesRequestModel, on: Request) -> EventLoopFuture<DrawPlayerTilesResponseModel> {
+    func playerDrawTiles(drawTilesRequest: DrawPlayerTilesRequestModel, on req: Request) -> EventLoopFuture<DrawPlayerTilesResponseModel> {
         let lettersCount = drawTilesRequest.letterCount
 
-        return Game.find(drawTilesRequest.gameId, on: on.db).flatMap { game in
-            guard var remainingLetters = game?.remainingLetters, remainingLetters.count >= lettersCount else {
-                return on.eventLoop.makeFailedFuture(Abort(.notFound, reason: "Not enough letters available"))
+        return playerRepository.findByUserId(userId: drawTilesRequest.userId, on: req).flatMap { player in
+            guard let player = player else {
+                return req.eventLoop.makeFailedFuture(Abort(.notFound, reason: "Player not found"))
             }
 
-            let drawnLetters = String(remainingLetters.prefix(lettersCount))
-            remainingLetters.removeFirst(lettersCount)
-            
-            game?.remainingLetters = remainingLetters
-            let updatePoolFuture = game!.update(on: on.db)
-            
-            return updatePoolFuture.flatMap {
-                return Player.find(drawTilesRequest.playerId, on: on.db).flatMap { player in
-                    guard let player = player else {
-                        return on.eventLoop.makeFailedFuture(Abort(.notFound))
+            return self.roomRepository.findByPlayer(player, on: req).flatMap { room in
+                guard let room = room else {
+                    return req.eventLoop.makeFailedFuture(Abort(.notFound, reason: "Room not found"))
+                }
+
+                return self.gameRepository.findByRoomId(roomId: room.id!, on: req).flatMap { game in
+                    guard var remainingLetters = game?.remainingLetters, remainingLetters.count >= lettersCount else {
+                        return req.eventLoop.makeFailedFuture(Abort(.notFound, reason: "Not enough letters available"))
                     }
-                    
-                    player.availableLetters += drawnLetters
-                    return player.update(on: on.db).map { DrawPlayerTilesResponseModel(tiles: drawnLetters) }
+
+                    let drawnLetters = String(remainingLetters.prefix(lettersCount))
+                    remainingLetters.removeFirst(lettersCount)
+
+                    game?.remainingLetters = remainingLetters
+                    let updatePoolFuture = game!.update(on: req.db)
+
+                    return updatePoolFuture.flatMap {
+                        player.availableLetters += drawnLetters
+                        return player.update(on: req.db).map {
+                            DrawPlayerTilesResponseModel(tiles: drawnLetters)
+                        }
+                    }
                 }
             }
         }

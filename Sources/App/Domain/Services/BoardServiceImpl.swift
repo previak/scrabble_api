@@ -4,19 +4,25 @@ import Fluent
 
 final class BoardServiceImpl: BoardService {
     private let boardRepository: BoardRepository
+    private let playerRepository: PlayerRepository
+    private let roomRepository: RoomRepository
+    private let gameRepository: GameRepository
     
     private let fileManager = FileManager.default
     private let jsonDecoder = JSONDecoder()
     
     private let startingBoardResourceName = "StartingBoard"
         
-    init(boardRepository: BoardRepository) {
+    init(boardRepository: BoardRepository, playerRepository: PlayerRepository, roomRepository: RoomRepository, gameRepository: GameRepository) {
             self.boardRepository = boardRepository
-    }
+            self.playerRepository = playerRepository
+            self.roomRepository = roomRepository
+            self.gameRepository = gameRepository
+        }
     
     func placeTile(placeTileRequest: PlaceTileRequestModel, on req: Request) -> EventLoopFuture<BoardDTO> {
         
-        let board = self.getBoard(getBoardRequest: GetBoardRequestModel(boardId: placeTileRequest.boardId), on: req)
+        let board = self.getBoard(getBoardRequest: GetBoardRequestModel(userId: placeTileRequest.userId), on: req)
         
         return board.flatMap { board in
             var mutableBoard = board
@@ -31,7 +37,7 @@ final class BoardServiceImpl: BoardService {
     
     func takeTileBack(takeTileBackRequest: TakeTileBackRequestModel, on req: Request) -> EventLoopFuture<BoardDTO> {
             
-        let board = self.getBoard(getBoardRequest: GetBoardRequestModel(boardId: takeTileBackRequest.boardId), on: req)
+        let board = self.getBoard(getBoardRequest: GetBoardRequestModel(userId: takeTileBackRequest.userId), on: req)
         
         return board.flatMap { board in
             var mutableBoard = board
@@ -53,12 +59,34 @@ final class BoardServiceImpl: BoardService {
     }
     
     func getBoard(getBoardRequest: GetBoardRequestModel, on req: Request) -> EventLoopFuture<BoardDTO> {
-        return boardRepository.find(id: getBoardRequest.boardId, on: req).flatMapThrowing {
-            board in
-                guard let board = board else {
-                    throw Abort(.notFound)
+        return playerRepository.findByUserId(userId: getBoardRequest.userId, on: req).flatMap { player in
+                guard let player = player else {
+                    return req.eventLoop.makeFailedFuture(Abort(.notFound, reason: "Player not found"))
                 }
-                return board.toDTO()!
+                
+                return self.roomRepository.findByPlayer(player, on: req).flatMap { room in
+                    guard let room = room else {
+                        return req.eventLoop.makeFailedFuture(Abort(.notFound, reason: "Room not found"))
+                    }
+                    
+                    return self.gameRepository.findByRoomId(roomId: room.id!, on: req).flatMap { game in
+                        guard let game = game else {
+                            return req.eventLoop.makeFailedFuture(Abort(.notFound, reason: "Game not found"))
+                        }
+                        
+                        return self.boardRepository.findByGameId(gameId: game.id!, on: req).flatMap { board in
+                            guard let board = board else {
+                                return req.eventLoop.makeFailedFuture(Abort(.notFound, reason: "Board not found"))
+                            }
+                            
+                            guard let boardDTO = board.toDTO() else {
+                                return req.eventLoop.makeFailedFuture(Abort(.internalServerError, reason: "Failed to convert board to DTO"))
+                            }
+                            
+                            return req.eventLoop.makeSucceededFuture(boardDTO)
+                        }
+                    }
+                }
             }
         }
  
