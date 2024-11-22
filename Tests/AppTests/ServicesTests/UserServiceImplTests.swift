@@ -63,7 +63,7 @@ final class MockUserService: UserService {
 }
 
 // MARK: - UserControllerTests
-final class UserControllerTests: XCTestCase {
+final class UserServiceTests: XCTestCase {
     var app: Application!
     var mockUserService: MockUserService!
     var userController: UserController!

@@ -2,35 +2,13 @@ import XCTVapor
 @testable import App // Замените YourModuleName на имя вашего модуля
 import Vapor
 
-// MARK: - Mock RoomRepository
-/*final class MockRoomRepository: RoomRepository {
-    func create(createRequest: App.CreateRoomRequest, on req: Vapor.Request) -> NIOCore.EventLoopFuture<App.Room> {
-        <#code#>
-    }
-    
-    func update(room: App.Room, on req: Vapor.Request) -> NIOCore.EventLoopFuture<App.Room> {
-        <#code#>
-    }
-    
-    func delete(id: UUID, on req: Vapor.Request) -> NIOCore.EventLoopFuture<Void> {
-        <#code#>
-    }
-    
-    var rooms: [UUID: Room] = [:]
-    var findByInvitationCodeHandler: ((String) -> Room?)?
-
-    func find(id: UUID, on req: Request) -> EventLoopFuture<Room?> {
-        return req.eventLoop.makeSucceededFuture(rooms[id])
-    }
-
-    func find(invitationCode: String, on req: Request) -> EventLoopFuture<Room?> {
-        let room = findByInvitationCodeHandler?(invitationCode)
-        return req.eventLoop.makeSucceededFuture(room)
-    }
-}*/
 
 // MARK: - Mock GameRepository
 final class MockGameRepository: GameRepository {
+    func deleteByRoomId(roomId: UUID, on req: Vapor.Request) -> NIOCore.EventLoopFuture<Void> {
+        return delete(id: UUID(), on: req)
+    }
+    
     func delete(id: UUID, on req: Vapor.Request) -> NIOCore.EventLoopFuture<Void> {
         return delete(id: id, on: req)
     }
@@ -57,6 +35,7 @@ final class GameServiceImplTests: XCTestCase {
     private var app: Application!
     private var mockRoomRepository: MockRoomRepository!
     private var mockGameRepository: MockGameRepository!
+    private var mockPlayerRepository: MockPlayerRepository!
     private var gameService: GameServiceImpl!
 
     override func setUp() {
@@ -64,7 +43,8 @@ final class GameServiceImplTests: XCTestCase {
         app = Application(.testing)
         mockRoomRepository = MockRoomRepository()
         mockGameRepository = MockGameRepository()
-        gameService = GameServiceImpl(gameRepository: mockGameRepository)
+        mockPlayerRepository = MockPlayerRepository()
+        gameService = GameServiceImpl(gameRepository: mockGameRepository, playerRepository: mockPlayerRepository, roomRepository: mockRoomRepository)
     }
 
     override func tearDown() {
@@ -128,7 +108,7 @@ final class GameServiceImplTests: XCTestCase {
 
         let createdGame = mockGameRepository.games[result.id!]
         XCTAssertNotNil(createdGame)
-        XCTAssertEqual(createdGame?.room.id, roomId)
+        XCTAssertEqual(createdGame?.$room.id, roomId)
         XCTAssertEqual(createdGame?.isPaused, false)
     }
 
@@ -140,6 +120,7 @@ final class GameServiceImplTests: XCTestCase {
 
         let gameId = UUID()
         let originalGame = Game(id: gameId, roomID: roomId, isPaused: false)
+        originalGame.$room.id = roomId
         mockGameRepository.games[gameId] = originalGame
 
         let updatedGameDTO = GameDTO(id: gameId, room: room.toDTO(), isPaused: true)
@@ -155,5 +136,45 @@ final class GameServiceImplTests: XCTestCase {
         let updatedGame = mockGameRepository.games[gameId]
         XCTAssertNotNil(updatedGame)
         XCTAssertEqual(updatedGame?.isPaused, true)
+    }
+    
+    /// Успешный выход из игры
+    func testLeaveGame_Success() throws {
+        let userId = UUID()
+        let gameId = UUID()
+
+        // Создаем игру для выхода
+        let room = Room()
+        let game = Game(id: gameId, roomID: room.id!, isPaused: false)
+        mockGameRepository.games[gameId] = game
+
+        // Создаем объект запроса
+        let leaveGameRequest = LeaveGameRequestModel(userId: userId)
+        let req = Request(application: app, on: app.eventLoopGroup.next())
+
+        // Вызываем метод leaveGame
+        let futureResult = gameService.leaveGame(leaveGameRequest: leaveGameRequest, on: req)
+        let result = try futureResult.wait()
+
+        // Проверяем, что игра удалена
+        XCTAssertNil(mockGameRepository.games[gameId])
+        XCTAssertEqual(result.playerCount, 0)
+    }
+
+    /// Ошибка: Игра не найдена
+    func testLeaveGame_GameNotFound() throws {
+        let userId = UUID()
+
+        // Создаем объект запроса - игра не существует
+        let leaveGameRequest = LeaveGameRequestModel(userId: userId)
+        let req = Request(application: app, on: app.eventLoopGroup.next())
+
+        // Вызываем метод leaveGame, ожидая ошибку
+        let futureResult = gameService.leaveGame(leaveGameRequest: leaveGameRequest, on: req)
+
+        XCTAssertThrowsError(try futureResult.wait()) { error in
+            XCTAssertTrue(error is Abort)
+            XCTAssertEqual((error as? Abort)?.status, .notFound)
+        }
     }
 }

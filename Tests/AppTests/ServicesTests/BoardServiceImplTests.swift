@@ -98,6 +98,7 @@ final class BoardServiceTests: XCTestCase {
         // Убедимся, что модификатор не изменился
         XCTAssertEqual(result.tiles[7][7].modifier, .empty)
     }
+    
 
     // Тест добавления на клетку с модификатором
     func testPlaceTileOnModifiedTile() throws {

@@ -4,6 +4,10 @@ import XCTVapor
 
 // MockRoomService для изоляции RoomService
 final class MockRoomService: RoomService {
+    func getPublicRooms(on req: Vapor.Request) -> NIOCore.EventLoopFuture<App.GetRoomsListResponseModel> {
+        return getPublicRooms(on: req)
+    }
+    
     func getRoom(id: UUID, on req: Vapor.Request) -> NIOCore.EventLoopFuture<App.RoomDTO> {
         return getRoom(id: id, on: req)
     }
