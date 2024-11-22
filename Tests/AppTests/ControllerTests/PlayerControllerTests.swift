@@ -69,6 +69,10 @@ final class PlayerControllerTests: XCTestCase {
 
 // MARK: - MockPlayerService
 final class MockPlayerService: PlayerService {
+    func getPlayerTiles(getPlayerTilesRequest: App.GetPlayerTilesRequestModel, on req: Vapor.Request) -> NIOCore.EventLoopFuture<App.GetPlayerTilesResponseModel> {
+        return getPlayerTiles(getPlayerTilesRequest: getPlayerTilesRequest, on: req)
+    }
+    
     func getPlayerTiles(id: UUID, on req: Vapor.Request) -> NIOCore.EventLoopFuture<String> {
         return getPlayerTiles(id: id, on: req)
     }

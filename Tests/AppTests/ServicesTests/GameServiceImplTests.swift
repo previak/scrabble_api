@@ -1,5 +1,5 @@
 import XCTVapor
-@testable import App // Замените YourModuleName на имя вашего модуля
+@testable import App
 import Vapor
 
 
@@ -60,11 +60,11 @@ final class GameServiceImplTests: XCTestCase {
     /// Успешное получение игры
     func testGetGame_Success() throws {
         let roomId = UUID()
-        let room = Room() // Используем конструктор
+        let room = Room()
         mockRoomRepository.rooms[roomId] = room
 
         let gameId = UUID()
-        let game = Game(id: gameId, roomID: roomId, isPaused: false)
+        let game = Game(id: gameId, roomID: roomId, isPaused: false, remainingLetters: "sdf")
         mockGameRepository.games[gameId] = game
 
         let req = Request(application: app, on: app.eventLoopGroup.next())
@@ -96,7 +96,7 @@ final class GameServiceImplTests: XCTestCase {
         let room = Room()
         mockRoomRepository.rooms[roomId] = room
 
-        let gameDTO = GameDTO(id: nil, room: room.toDTO(), isPaused: false)
+        let gameDTO = GameDTO(id: nil, room: room.toDTO(), isPaused: false, remainingLetters: "asd")
         let req = Request(application: app, on: app.eventLoopGroup.next())
 
         let futureResult = gameService.createGame(game: gameDTO, on: req)
@@ -119,11 +119,11 @@ final class GameServiceImplTests: XCTestCase {
         mockRoomRepository.rooms[roomId] = room
 
         let gameId = UUID()
-        let originalGame = Game(id: gameId, roomID: roomId, isPaused: false)
+        let originalGame = Game(id: gameId, roomID: roomId, isPaused: false, remainingLetters: "sdf")
         originalGame.$room.id = roomId
         mockGameRepository.games[gameId] = originalGame
 
-        let updatedGameDTO = GameDTO(id: gameId, room: room.toDTO(), isPaused: true)
+        let updatedGameDTO = GameDTO(id: gameId, room: room.toDTO(), isPaused: true, remainingLetters: "sdf")
         let req = Request(application: app, on: app.eventLoopGroup.next())
 
         let futureResult = gameService.updateGame(game: updatedGameDTO, on: req)
@@ -143,20 +143,16 @@ final class GameServiceImplTests: XCTestCase {
         let userId = UUID()
         let gameId = UUID()
 
-        // Создаем игру для выхода
         let room = Room()
-        let game = Game(id: gameId, roomID: room.id!, isPaused: false)
+        let game = Game(id: gameId, roomID: room.id!, isPaused: false, remainingLetters: "lwko")
         mockGameRepository.games[gameId] = game
 
-        // Создаем объект запроса
         let leaveGameRequest = LeaveGameRequestModel(userId: userId)
         let req = Request(application: app, on: app.eventLoopGroup.next())
 
-        // Вызываем метод leaveGame
         let futureResult = gameService.leaveGame(leaveGameRequest: leaveGameRequest, on: req)
         let result = try futureResult.wait()
 
-        // Проверяем, что игра удалена
         XCTAssertNil(mockGameRepository.games[gameId])
         XCTAssertEqual(result.playerCount, 0)
     }
@@ -165,11 +161,9 @@ final class GameServiceImplTests: XCTestCase {
     func testLeaveGame_GameNotFound() throws {
         let userId = UUID()
 
-        // Создаем объект запроса - игра не существует
         let leaveGameRequest = LeaveGameRequestModel(userId: userId)
         let req = Request(application: app, on: app.eventLoopGroup.next())
 
-        // Вызываем метод leaveGame, ожидая ошибку
         let futureResult = gameService.leaveGame(leaveGameRequest: leaveGameRequest, on: req)
 
         XCTAssertThrowsError(try futureResult.wait()) { error in

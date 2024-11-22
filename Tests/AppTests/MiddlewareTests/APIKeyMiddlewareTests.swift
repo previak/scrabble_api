@@ -9,9 +9,8 @@ final class APIKeyMiddlewareTests: XCTestCase {
 
     override func setUp() async throws {
         app = Application(.testing)
-        app.middleware.use(APIKeyMiddleware()) // Подключаем наш middleware
+        app.middleware.use(APIKeyMiddleware())
 
-        // Регистрируем тестовый маршрут
         app.get("test") { req in
             return "Success"
         }
@@ -23,18 +22,16 @@ final class APIKeyMiddlewareTests: XCTestCase {
 
     /// Тест на выполнение запроса с валидным API-ключом
     func testRequestWithValidApiKey() async throws {
-        // Отправляем запрос с валидным API-ключом
         try app.test(.GET, "/test", headers: [headerName: validApiKey]) { res in
             XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(res.body.string, "Success") // Убедимся, что получили "Success"
+            XCTAssertEqual(res.body.string, "Success")
         }
     }
 
     /// Тест выполнения запроса с отсутствием API-ключа
     func testRequestWithoutApiKey() async throws {
-        // Отправляем запрос без API-ключа
         try app.test(.GET, "/test") { res in
-            XCTAssertEqual(res.status, .unauthorized) // Убедимся, что статус 401
+            XCTAssertEqual(res.status, .unauthorized)
             let responseBody = try JSONDecoder().decode(ErrorResponse.self, from: res.body)
             XCTAssertEqual(responseBody.statusCode, 401)
             XCTAssertEqual(responseBody.message, "Invalid or missing API Key.")
@@ -43,9 +40,8 @@ final class APIKeyMiddlewareTests: XCTestCase {
 
     /// Тест выполнения запроса с невалидным API-ключом
     func testRequestWithInvalidApiKey() async throws {
-        // Отправляем запрос с невалидным API-ключом
         try app.test(.GET, "/test", headers: [headerName: "invalid-api-key"]) { res in
-            XCTAssertEqual(res.status, .unauthorized) // Убедимся, что статус 401
+            XCTAssertEqual(res.status, .unauthorized)
             let responseBody = try JSONDecoder().decode(ErrorResponse.self, from: res.body)
             XCTAssertEqual(responseBody.statusCode, 401)
             XCTAssertEqual(responseBody.message, "Invalid or missing API Key.")

@@ -106,9 +106,9 @@ final class BoardControllerTests: XCTestCase {
                     isPublic: false,
                     invitationCode: "ROOM123",
                     gameState: .forming,
-                    admin: User(id: UUID(), username: "admin", passwordHash: "hashedPassword", apiKey: "apiKey123") // Исправлено
+                    admin: User(id: UUID(), username: "admin", passwordHash: "hashedPassword", apiKey: "apiKey123")
                 ),
-                isPaused: false
+                isPaused: false, remainingLetters: "sdl"
             ),
             tiles: [[tile]]
         )

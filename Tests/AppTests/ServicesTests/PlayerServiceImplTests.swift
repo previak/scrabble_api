@@ -57,7 +57,7 @@ final class PlayerServiceImplTests: XCTestCase {
     }
 
     override func tearDown() {
-        mockPlayerRepository = nil // Явно указываем тип nil
+        mockPlayerRepository = nil 
         playerService = nil
         app.shutdown()
         super.tearDown()
