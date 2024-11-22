@@ -2,10 +2,6 @@ import Vapor
 import Fluent
 
 final class RoomServiceImpl: RoomService {
-    func kickPlayer(adminUserId: UUID, playerNicknameToKick: String, on req: Vapor.Request) -> NIOCore.EventLoopFuture<Void> {
-        return kickPlayer(adminUserId: UUID(), playerNicknameToKick: playerNicknameToKick, on: req)
-    }
-    
     private let roomRepository: RoomRepository
     private let playerRepository: PlayerRepository
     
@@ -108,12 +104,7 @@ final class RoomServiceImpl: RoomService {
         return roomRepository.delete(id: id, on: req)
     }
     
-<<<<<<< HEAD
     func kickPlayer(kickPlayerRequest: KickPlayerRequestModel, on req: Request) -> EventLoopFuture<Void> {
-=======
-
-    /*func kickPlayer(adminUserId: UUID, playerNicknameToKick: String, on req: Request) -> EventLoopFuture<Void> {
->>>>>>> c6ebf1c (fix)
         return Room.query(on: req.db)
             .filter(\.$admin.$id == kickPlayerRequest.adminId)
             .first()
@@ -138,11 +129,5 @@ final class RoomServiceImpl: RoomService {
                     return self.playerRepository.delete(id: playerToKick.id!, on: req)
                 }
             }
-<<<<<<< HEAD
     }
-=======
-    }*/
-
-
->>>>>>> c6ebf1c (fix)
 }
