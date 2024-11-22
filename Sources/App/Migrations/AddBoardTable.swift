@@ -5,7 +5,7 @@ struct AddBoardTable: Migration {
         return database.schema("boards")
             .id()
             .field("game_id", .uuid, .required, .references("games", "id"))
-            .field("tiles", .json, .required)
+            .field("tiles", .string, .required)
             .create()
     }
     

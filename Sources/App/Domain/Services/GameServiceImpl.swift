@@ -5,11 +5,21 @@ final class GameServiceImpl: GameService {
     private let gameRepository: GameRepository
     private let playerRepository: PlayerRepository
     private let roomRepository: RoomRepository
+    private let boardService: BoardService
+    private let boardRepository: BoardRepository
     
-    init(gameRepository: GameRepository, playerRepository: PlayerRepository, roomRepository: RoomRepository) {
+    init(
+        gameRepository: GameRepository,
+        playerRepository: PlayerRepository,
+        roomRepository: RoomRepository,
+        boardService: BoardService,
+        boardRepository: BoardRepository
+    ) {
         self.gameRepository = gameRepository
         self.playerRepository = playerRepository
         self.roomRepository = roomRepository
+        self.boardService = boardService
+        self.boardRepository = boardRepository
     }
     
     func getGame(id: UUID, on req: Request) -> EventLoopFuture<GameDTO> {
@@ -97,69 +107,128 @@ final class GameServiceImpl: GameService {
     }
     
     func startGame(startGameRequest: StartGameRequestModel, on req: Request) -> EventLoopFuture<StartGameResponseModel> {
-        return Player.query(on: req.db)
-            .filter(\.$user.$id == startGameRequest.userId)
-            .first()
-            .flatMap { player in
-                guard let player = player else {
-                    return req.eventLoop.makeFailedFuture(Abort(.notFound, reason: "Player not found"))
+        return findPlayer(for: startGameRequest.userId, on: req).flatMap { player in
+            guard let player = player else {
+                return req.eventLoop.makeFailedFuture(Abort(.notFound, reason: "Player not found"))
+            }
+
+            return self.findRoom(for: player.$room.id, on: req).flatMap { room in
+                guard let room = room else {
+                    return req.eventLoop.makeFailedFuture(Abort(.notFound, reason: "Room not found"))
                 }
-                
-                return Room.find(player.$room.id, on: req.db).flatMap { room in
-                    guard let room = room else {
-                        return req.eventLoop.makeFailedFuture(Abort(.notFound, reason: "Room not found"))
-                    }
-                    
-                    guard room.gameState == .forming else {
-                        return req.eventLoop.makeFailedFuture(Abort(.badRequest, reason: "Room is not in 'Forming' state"))
-                    }
-                    
-                    return Player.query(on: req.db).filter(\.$room.$id == room.id!).all().flatMap { players in
-                        guard !players.isEmpty else {
-                            return req.eventLoop.makeFailedFuture(Abort(.badRequest, reason: "No players in the room"))
-                        }
-                        
-                        let shuffledPlayers = players.shuffled()
-                        for (index, player) in shuffledPlayers.enumerated() {
-                            player.turnOrder = index + 1
-                            player.score = 0
-                        }
-                        
-                        let gameId = UUID()
-                        let remainingLetters = self.generateInitialLetterBag()
-                        let newGame = Game(id: gameId, roomID: room.id!, isPaused: false, remainingLetters: remainingLetters)
-                        
-                        return self.gameRepository.create(game: newGame, on: req).flatMap { createdGame in
-                            shuffledPlayers.reduce(req.eventLoop.makeSucceededFuture([Player]())) { previousFuture, player in
-                                previousFuture.flatMap { processedPlayers in
-                                    let drawRequest = DrawPlayerTilesRequestModel(userId: player.$user.id, letterCount: 7)
-                                    return self.playerDrawTiles(drawTilesRequest: drawRequest, on: req).map { response in
-                                        player.availableLetters = response.tiles
-                                        return processedPlayers + [player]
-                                    }
-                                }
-                            }.flatMap { updatedPlayers in
-                                let saveFutures = updatedPlayers.map { $0.save(on: req.db) }
-                                return saveFutures.flatten(on: req.eventLoop).flatMap {
-                                    room.gameState = .playing
-                                    return room.save(on: req.db).map {
-                                        let response = StartGameResponseModel(
-                                            players: updatedPlayers.map { player in
-                                                StartGamePlayerInfoModel(
-                                                    turnOrder: player.turnOrder,
-                                                    nickname: player.nickname
-                                                )
-                                            }
-                                        )
-                                        return response
-                                    }
-                                }
-                            }
+
+                guard room.gameState == .forming else {
+                    return req.eventLoop.makeFailedFuture(Abort(.badRequest, reason: "Room is not in 'Forming' state"))
+                }
+
+                return self.getPlayersInRoom(room, on: req).flatMap { players in
+                    return self.initializeGame(with: players, room: room, on: req)
+                }
+            }
+        }
+    }
+
+    private func findPlayer(for userId: UUID, on req: Request) -> EventLoopFuture<Player?> {
+        return Player.query(on: req.db)
+            .filter(\.$user.$id == userId)
+            .first()
+    }
+
+    private func findRoom(for roomId: UUID, on req: Request) -> EventLoopFuture<Room?> {
+        return Room.find(roomId, on: req.db)
+    }
+
+    private func getPlayersInRoom(_ room: Room, on req: Request) -> EventLoopFuture<[Player]> {
+        return Player.query(on: req.db)
+            .filter(\.$room.$id == room.id!)
+            .all()
+    }
+
+    private func initializeGame(with players: [Player], room: Room, on req: Request) -> EventLoopFuture<StartGameResponseModel> {
+        guard !players.isEmpty else {
+            return req.eventLoop.makeFailedFuture(Abort(.badRequest, reason: "No players in the room"))
+        }
+
+        let shuffledPlayers = players.shuffled()
+
+        // Set turn orders and initial scores for players
+        for (index, player) in shuffledPlayers.enumerated() {
+            player.turnOrder = index + 1
+            player.score = 0
+        }
+
+        return createGame(room: room, players: shuffledPlayers, on: req).flatMap { createdGame in
+            return self.assignTilesToPlayers(players: shuffledPlayers, on: req).flatMap { updatedPlayers in
+                return self.savePlayers(updatedPlayers, on: req).flatMap {
+                    self.updateRoomState(room, on: req).flatMap {
+                        self.createBoard(gameId: createdGame.id!, on: req).flatMap { board in
+                            return self.generateStartGameResponse(players: updatedPlayers, on: req)
                         }
                     }
                 }
             }
+        }
     }
+
+    private func createGame(room: Room, players: [Player], on req: Request) -> EventLoopFuture<Game> {
+        let gameId = UUID()
+        let remainingLetters = generateInitialLetterBag()
+        let newGame = Game(id: gameId, roomID: room.id!, isPaused: false, remainingLetters: remainingLetters)
+
+        return self.gameRepository.create(game: newGame, on: req)
+    }
+
+    private func assignTilesToPlayers(players: [Player], on req: Request) -> EventLoopFuture<[Player]> {
+        return players.reduce(req.eventLoop.makeSucceededFuture([Player]())) { previousFuture, player in
+            previousFuture.flatMap { processedPlayers in
+                let drawRequest = DrawPlayerTilesRequestModel(userId: player.$user.id, letterCount: 7)
+                return self.playerDrawTiles(drawTilesRequest: drawRequest, on: req).map { response in
+                    player.availableLetters = response.tiles
+                    return processedPlayers + [player] // Append processed player to the result array
+                }
+            }
+        }
+    }
+
+    private func savePlayers(_ players: [Player], on req: Request) -> EventLoopFuture<Void> {
+        let saveFutures = players.map { $0.save(on: req.db) }
+        return saveFutures.flatten(on: req.eventLoop)
+    }
+
+    private func updateRoomState(_ room: Room, on req: Request) -> EventLoopFuture<Void> {
+        room.gameState = .playing
+        return room.save(on: req.db)
+    }
+
+    private func createBoard(gameId: UUID, on req: Request) -> EventLoopFuture<Board> {
+        return self.boardService.getStartingBoard(on: req).flatMap { boardDTO in
+            let newBoard = Board(id: UUID(), gameID: gameId, tiles: self.encodeTilesToString(tiles: boardDTO.tiles))
+            return self.boardRepository.create(board: newBoard, on: req)
+        }
+    }
+
+    private func generateStartGameResponse(players: [Player], on req: Request) -> EventLoopFuture<StartGameResponseModel> {
+        let response = StartGameResponseModel(
+            players: players.map { player in
+                StartGamePlayerInfoModel(
+                    turnOrder: player.turnOrder,
+                    nickname: player.nickname
+                )
+            }
+        )
+        return req.eventLoop.makeSucceededFuture(response)
+    }
+
+
+    // Helper function to encode tiles array to string
+    func encodeTilesToString(tiles: [[TileDTO]]) -> String {
+        let encoder = JSONEncoder()
+        guard let jsonData = try? encoder.encode(tiles) else {
+            return "[]"
+        }
+        return String(data: jsonData, encoding: .utf8) ?? "[]"
+    }
+
 
 
     private func generateInitialLetterBag() -> String {
