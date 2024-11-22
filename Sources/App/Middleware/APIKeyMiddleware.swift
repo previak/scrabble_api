@@ -1,14 +1,21 @@
 import Vapor
+import Fluent
 
 struct APIKeyMiddleware: AsyncMiddleware {
-    private let validApiKey = "your-valid-api-key"
-
     func respond(to request: Vapor.Request, chainingTo next: any Vapor.AsyncResponder) async throws -> Vapor.Response {
         let apiKeyHeader = "x-api-key"
-        guard let apiKey = request.headers[apiKeyHeader].first, apiKey == validApiKey else {
+        guard let apiKey = request.headers[apiKeyHeader].first else {
             return await request.errorResponse(
                 status: .unauthorized,
-                message: "Invalid or missing API Key."
+                message: "Missing API Key."
+            )
+        }
+
+        let user = try await User.query(on: request.db).filter(\.$apiKey == apiKey).first()
+        guard let _ = user else {
+            return await request.errorResponse(
+                status: .unauthorized,
+                message: "Invalid API Key."
             )
         }
 
