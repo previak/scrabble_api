@@ -15,19 +15,24 @@ final class Game: Model, @unchecked Sendable {
     @Field(key: "is_paused")
     var isPaused: Bool
     
+    @Field(key: "remaining_tiles")
+    var remainingLetters: String
+    
     init() {}
     
-    init(id: UUID, roomID: UUID, isPaused: Bool) {
+    init(id: UUID, roomID: UUID, isPaused: Bool, remainingLetters: String) {
         self.id = id
         self.$room.id = roomID
         self.isPaused = isPaused
+        self.remainingLetters = remainingLetters
     }
     
     func toDTO() -> GameDTO {
         .init(
             id: self.id,
             room: self.room.toDTO(),
-            isPaused: self.isPaused
+            isPaused: self.isPaused,
+            remainingLetters: self.remainingLetters
         )
     }
 }
