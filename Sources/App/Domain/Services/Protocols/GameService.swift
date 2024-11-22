@@ -7,4 +7,5 @@ protocol GameService: Sendable {
     func playerDrawTiles(drawTilesRequest: DrawPlayerTilesRequestModel, on req: Request) -> EventLoopFuture<DrawPlayerTilesResponseModel>
     func leaveGame(leaveGameRequest: LeaveGameRequestModel, on req: Request) -> EventLoopFuture<LeaveGameResponseModel>
     func startGame(startGameRequest: StartGameRequestModel, on req: Request) -> EventLoopFuture<StartGameResponseModel>
+    func getLeftTilesNumber(getLeftTilesNumberRequest: GetLeftTilesNumberRequestModel, on req: Request) -> EventLoopFuture<GetLeftTilesNumberResponseModel>
 }

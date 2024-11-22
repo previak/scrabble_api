@@ -37,6 +37,13 @@ struct GameController: RouteCollection, Sendable {
                 response: .type(Response.self),
                 auth: .apiKey(), .bearer()
             )
+        games.get("tile", "get-left-number", use: getLeftTilesNumber)
+            .openAPI(
+                summary: "Get left tiles number",
+                description: "Get number of letter tiles left in the bag",
+                response: .type(GetPlayerTilesResponseDTO.self),
+                auth: .apiKey(), .bearer()
+            )
         
     }
 
@@ -85,7 +92,6 @@ struct GameController: RouteCollection, Sendable {
     
     @Sendable
     func startGame(req: Request) throws -> EventLoopFuture<Response> {
-        
         let authHeader = req.headers.bearerAuthorization!
         let token = authHeader.token
     
@@ -99,6 +105,27 @@ struct GameController: RouteCollection, Sendable {
                 .startGame(startGameRequest: startGameRequest, on: req)
                 .map{_ in
                     return Response(statusCode: HTTPResponseStatus.ok)
+                }
+        }
+    }
+    
+    @Sendable
+    func getLeftTilesNumber(req: Request) throws -> EventLoopFuture<GetLeftTilesNumberResponseDTO> {
+        
+        let authHeader = req.headers.bearerAuthorization!
+        let token = authHeader.token
+        
+        return userService.authenticate(jwt: token, on: req).flatMap { user in
+            let getLeftTilesNumberRequest = GetLeftTilesNumberRequestModel(
+                userId: user.id!
+            )
+            
+            
+            return gameService.getLeftTilesNumber(getLeftTilesNumberRequest: getLeftTilesNumberRequest, on: req)
+                .map { responseModel in
+                    GetLeftTilesNumberResponseDTO(
+                        tilesNumber: responseModel.tilesNumber
+                    )
                 }
         }
     }

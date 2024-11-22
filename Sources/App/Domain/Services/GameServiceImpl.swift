@@ -127,6 +127,32 @@ final class GameServiceImpl: GameService {
             }
         }
     }
+    
+    func getLeftTilesNumber(getLeftTilesNumberRequest: GetLeftTilesNumberRequestModel, on req: Request) -> EventLoopFuture<GetLeftTilesNumberResponseModel> {
+        
+        return playerRepository.findByUserId(userId: getLeftTilesNumberRequest.userId, on: req).flatMap { player in
+                guard let player = player else {
+                    return req.eventLoop.makeFailedFuture(Abort(.notFound, reason: "Player not found"))
+                }
+
+            return self.roomRepository.find(id: player.$room.id, on: req).flatMap { room in
+                    guard let room = room else {
+                        return req.eventLoop.makeFailedFuture(Abort(.notFound, reason: "Room not found"))
+                    }
+
+                return self.gameRepository.findByRoomId(roomId: room.id!, on: req).flatMap { game in
+                        guard let game = game else {
+                            return req.eventLoop.makeFailedFuture(Abort(.notFound, reason: "Game not found"))
+                        }
+                        
+                        let remainingTilesCount = game.remainingLetters.count
+
+                        let response = GetLeftTilesNumberResponseModel(tilesNumber: remainingTilesCount)
+                        return req.eventLoop.makeSucceededFuture(response)
+                    }
+                }
+            }
+    }
 
     private func findPlayer(for userId: UUID, on req: Request) -> EventLoopFuture<Player?> {
         return Player.query(on: req.db)
@@ -218,7 +244,6 @@ final class GameServiceImpl: GameService {
         )
         return req.eventLoop.makeSucceededFuture(response)
     }
-
 
     // Helper function to encode tiles array to string
     func encodeTilesToString(tiles: [[TileDTO]]) -> String {
