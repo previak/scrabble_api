@@ -110,19 +110,18 @@ struct RoomController: RouteCollection, Sendable {
 
     @Sendable
     func kickPlayer(req: Request) throws -> EventLoopFuture<Response> {
-        guard let authHeader = req.headers.bearerAuthorization else {
-            return req.eventLoop.makeFailedFuture(Abort(.unauthorized, reason: "Authorization header is missing"))
-        }
+        let request = try req.content.decode(KickPlayerRequestDTO.self)
+        
+        let authHeader = req.headers.bearerAuthorization!
         let token = authHeader.token
         
-        let kickPlayerRequestDTO = try req.content.decode(KickPlayerRequestDTO.self)
-        
         return userService.authenticate(jwt: token, on: req).flatMap { adminUser in
-            return self.roomService.kickPlayer(
-                adminUserId: adminUser.id!,
-                playerNicknameToKick: kickPlayerRequestDTO.nickname,
-                on: req
-            ).map {
+            let kickPlayerRequest = KickPlayerRequestModel(
+                adminId: adminUser.id!,
+                nickname: request.nickname
+            )
+            
+            return self.roomService.kickPlayer(kickPlayerRequest: kickPlayerRequest, on: req).map {
                 return Response(statusCode: HTTPResponseStatus.ok)
             }
         }

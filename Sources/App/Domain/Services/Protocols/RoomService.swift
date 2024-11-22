@@ -7,5 +7,5 @@ protocol RoomService: Sendable {
     func deleteRoom(id: UUID, on req: Request) -> EventLoopFuture<Void>
     func joinRoom(joinRequest: JoinRoomRequestModel, on req: Request) -> EventLoopFuture<Void>
     func getPublicRooms(on req: Request) -> EventLoopFuture<GetRoomsListResponseModel>
-    func kickPlayer(adminUserId: UUID, playerNicknameToKick: String, on req: Request) -> EventLoopFuture<Void>
+    func kickPlayer(kickPlayerRequest: KickPlayerRequestModel, on req: Request) -> EventLoopFuture<Void>
 }

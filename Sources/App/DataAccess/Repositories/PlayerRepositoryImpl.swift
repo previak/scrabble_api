@@ -18,6 +18,13 @@ final class PlayerRepositoryImpl: PlayerRepository {
             .all()
     }
     
+    func findByNicknameAndRoomId(nickname: String, roomId: UUID, on req: Request) -> EventLoopFuture<Player?> {
+            return Player.query(on: req.db)
+                .filter(\.$nickname == nickname)
+                .filter(\.$room.$id == roomId)
+                .first()
+        }
+    
     func create(createRequest: CreatePlayerRequest, on req: Request) -> EventLoopFuture<Player>{
         return req.db.transaction { transaction in
             let userFuture = User.find(createRequest.userId, on: transaction)

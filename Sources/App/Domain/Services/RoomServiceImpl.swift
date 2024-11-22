@@ -104,31 +104,30 @@ final class RoomServiceImpl: RoomService {
         return roomRepository.delete(id: id, on: req)
     }
     
-
-    func kickPlayer(adminUserId: UUID, playerNicknameToKick: String, on req: Request) -> EventLoopFuture<Void> {
+    func kickPlayer(kickPlayerRequest: KickPlayerRequestModel, on req: Request) -> EventLoopFuture<Void> {
         return Room.query(on: req.db)
-            .filter(\.$admin.$id == adminUserId)
+            .filter(\.$admin.$id == kickPlayerRequest.adminId)
             .first()
-            .flatMap { adminRoom in
+            .flatMapThrowing { (adminRoom: Room?) -> Room in
                 guard let adminRoom = adminRoom else {
-                    return req.eventLoop.makeFailedFuture(Abort(.forbidden, reason: "You are not an admin of any room"))
+                    throw Abort(.forbidden, reason: "You are not an admin of any room")
                 }
-                
-                // Find the player by nickname in the admin's room
+                return adminRoom
+            }
+            .flatMap { (adminRoom: Room) -> EventLoopFuture<Void> in
                 return self.playerRepository.findByNicknameAndRoomId(
-                    nickname: playerNicknameToKick,
+                    nickname: kickPlayerRequest.nickname,
                     roomId: adminRoom.id!,
                     on: req
-                ).flatMap { playerToKick in
+                ).flatMapThrowing { (playerToKick: Player?) -> Player in
                     guard let playerToKick = playerToKick else {
-                        return req.eventLoop.makeFailedFuture(Abort(.notFound, reason: "Player not found"))
+                        throw Abort(.notFound, reason: "Player not found")
                     }
-                    
-                    // Remove the player
-                    return self.playerRepository.delete(playerToKick, on: req)
+                    return playerToKick
+                }
+                .flatMap { (playerToKick: Player) -> EventLoopFuture<Void> in
+                    return self.playerRepository.delete(id: playerToKick.id!, on: req)
                 }
             }
     }
-
-
 }
