@@ -11,12 +11,12 @@ struct GameController: RouteCollection, Sendable {
     func boot(routes: RoutesBuilder) throws {
         let games = routes.grouped("games")
 
-        games.post("player-draw-tiles", use: playerDrawTiles)
+        games.post("tile", "draw", use: playerDrawTiles)
             .openAPI(
                 summary: "Draw tiles for player",
                 description: "Draw tiles for player",
                 body: .type(DrawPlayerTilesRequestDTO.self),
-                response: .type(String.self),
+                response: .type(DrawPlayerTilesResponseDTO.self),
                 auth: .apiKey(), .bearer()
             )
         
@@ -31,7 +31,7 @@ struct GameController: RouteCollection, Sendable {
     }
 
     @Sendable
-    func playerDrawTiles(req: Request) throws -> EventLoopFuture<String> {
+    func playerDrawTiles(req: Request) throws -> EventLoopFuture<DrawPlayerTilesResponseDTO> {
         let request = try req.content.decode(DrawPlayerTilesRequestDTO.self)
         
         let drawTilesRequest = DrawPlayerTilesRequestModel(
@@ -40,7 +40,13 @@ struct GameController: RouteCollection, Sendable {
             letterCount: request.letterCount
         )
         
-        return gameService.playerDrawTiles(drawTilesRequest: drawTilesRequest, on: req)
+        return gameService
+            .playerDrawTiles(drawTilesRequest: drawTilesRequest, on: req)
+            .map { responseModel in
+                DrawPlayerTilesResponseDTO(
+                    tiles: responseModel.tiles
+                )
+            }
     }
     
     @Sendable

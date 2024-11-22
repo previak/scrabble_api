@@ -31,7 +31,7 @@ final class GameServiceImpl: GameService {
         return gameRepository.update(game: model, on: req).map { $0.toDTO() }
     }
     
-    func playerDrawTiles(drawTilesRequest: DrawPlayerTilesRequestModel, on: Request) -> EventLoopFuture<String> {
+    func playerDrawTiles(drawTilesRequest: DrawPlayerTilesRequestModel, on: Request) -> EventLoopFuture<DrawPlayerTilesResponseModel> {
         let lettersCount = drawTilesRequest.letterCount
 
         return Game.find(drawTilesRequest.gameId, on: on.db).flatMap { game in
@@ -52,7 +52,7 @@ final class GameServiceImpl: GameService {
                     }
                     
                     player.availableLetters += drawnLetters
-                    return player.update(on: on.db).map { drawnLetters }
+                    return player.update(on: on.db).map { DrawPlayerTilesResponseModel(tiles: drawnLetters) }
                 }
             }
         }
