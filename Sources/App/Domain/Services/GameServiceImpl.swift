@@ -87,4 +87,69 @@ final class GameServiceImpl: GameService {
             }
         }
     }
+    
+    func startGame(startGameRequest: StartGameRequestModel, on req: Request) -> EventLoopFuture<StartGameResponseModel> {
+        return Room.find(startGameRequest.roomId, on: req.db).flatMap { room in
+            guard let room = room else {
+                return req.eventLoop.makeFailedFuture(Abort(.notFound, reason: "Room not found"))
+            }
+            
+            guard room.gameState == .forming else {
+                return req.eventLoop.makeFailedFuture(Abort(.badRequest, reason: "Room is not in 'Forming' state"))
+            }
+            
+            return Player.query(on: req.db).filter(\.$room.$id == room.id!).all().flatMap { players in
+                guard !players.isEmpty else {
+                    return req.eventLoop.makeFailedFuture(Abort(.badRequest, reason: "No players in the room"))
+                }
+                
+                let shuffledPlayers = players.shuffled()
+                for (index, player) in shuffledPlayers.enumerated() {
+                    player.turnOrder = index + 1
+                    player.score = 0
+                }
+                
+                let gameId = UUID()
+                let remainingLetters = self.generateInitialLetterBag()
+                let newGame = Game(id: gameId, roomID: room.id!, isPaused: false, remainingLetters: remainingLetters)
+                
+                return self.gameRepository.create(game: newGame, on: req).flatMap { createdGame in
+                    // Sequentially process players to draw tiles
+                    shuffledPlayers.reduce(req.eventLoop.makeSucceededFuture([Player]())) { previousFuture, player in
+                        previousFuture.flatMap { processedPlayers in
+                            let drawRequest = DrawPlayerTilesRequestModel(gameId: gameId, playerId: player.id!, letterCount: 7)
+                            return self.playerDrawTiles(drawTilesRequest: drawRequest, on: req).map { response in
+                                player.availableLetters = response.tiles
+                                return processedPlayers + [player] // Append processed player to the result array
+                            }
+                        }
+                    }.flatMap { updatedPlayers in
+                        // Save all updated players
+                        let saveFutures = updatedPlayers.map { $0.save(on: req.db) }
+                        return saveFutures.flatten(on: req.eventLoop).flatMap {
+                            room.gameState = .playing
+                            return room.save(on: req.db).map {
+                                let response = StartGameResponseModel(
+                                    players: updatedPlayers.map { player in
+                                        StartGamePlayerInfoModel(
+                                            turnOrder: player.turnOrder,
+                                            nickname: player.nickname
+                                        )
+                                    }
+                                )
+                                return response
+                            }
+                        }
+                    }
+                }
+
+            }
+        }
+    }
+
+
+    private func generateInitialLetterBag() -> String {
+        let letters = "AAAAAAAAABBCCDDDDEEEEEEEEEEEFFGGGHHIIIIIIIIIJKLLLLMMNNNNNNOOOOOOPPQRRRRRRSSSSTTTTTTUUUUVVWWXYYZ"
+        return String(letters.shuffled())
+    }
 }

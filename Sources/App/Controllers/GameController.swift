@@ -28,6 +28,16 @@ struct GameController: RouteCollection, Sendable {
                 response: .type(LeaveGameResponseDTO.self),
                 auth: .apiKey(), .bearer()
             )
+        
+        games.post("start", use: startGame)
+            .openAPI(
+                summary: "Start game",
+                description: "Start game",
+                body: .type(StartGameRequestDTO.self),
+                response: .type(Response.self),
+                auth: .apiKey(), .bearer()
+            )
+        
     }
 
     @Sendable
@@ -66,5 +76,18 @@ struct GameController: RouteCollection, Sendable {
             }
     }
     
-    
+    @Sendable
+    func startGame(req: Request) throws -> EventLoopFuture<Response> {
+        let request = try req.content.decode(StartGameRequestDTO.self)
+        
+        let startGameRequest = StartGameRequestModel(
+            roomId: request.roomId
+        )
+        
+        return gameService
+            .startGame(startGameRequest: startGameRequest, on: req)
+            .map{_ in
+                return Response(statusCode: HTTPResponseStatus.ok)
+            }
+    }
 }

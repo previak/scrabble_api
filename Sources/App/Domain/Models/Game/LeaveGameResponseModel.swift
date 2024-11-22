@@ -1,7 +1,7 @@
 import Foundation
 
 final class LeaveGameResponseModel: Sendable {
-    var playerCount: Int
+    let playerCount: Int
     
     init (playerCount: Int) {
         self.playerCount = playerCount
