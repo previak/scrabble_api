@@ -34,7 +34,6 @@ final class MockUserService: UserService {
         return loginClosure!(username, password, req)
     }
 
-    // Остальные заглушки для методов сервиса
     var getUserClosure: ((UUID, Request) -> EventLoopFuture<UserDTO>)?
     var createUserClosure: ((UserDTO, Request) -> EventLoopFuture<UserDTO>)?
     var updateUserClosure: ((UserDTO, Request) -> EventLoopFuture<UserDTO>)?
@@ -63,7 +62,7 @@ final class MockUserService: UserService {
 }
 
 // MARK: - UserControllerTests
-final class UserControllerTests: XCTestCase {
+final class UserServiceTests: XCTestCase {
     var app: Application!
     var mockUserService: MockUserService!
     var userController: UserController!
@@ -82,26 +81,21 @@ final class UserControllerTests: XCTestCase {
 
     /// Тест успешной регистрации
     func testRegisterUserSuccess() throws {
-        // Создаем запрос и ожидаемый ответ
         let registerRequest = RegisterRequestModel(username: "newuser", password: "securePassword123")
         let expectedResponse = RegisterResponseDTO(accessToken: "sample_access_token", apiKey: "sample_api_key")
 
-        // Настраиваем мок-сервис
         mockUserService.registerClosure = { request, req in
             XCTAssertEqual(request.username, "newuser")
             XCTAssertEqual(request.password, "securePassword123")
             return req.eventLoop.future(expectedResponse)
         }
 
-        // Подготавливаем HTTP запрос
         let req = Request(application: app, method: .POST, url: URI(string: "/auth/register"), on: app.eventLoopGroup.next())
-        try req.content.encode(registerRequest, as: .json) // Кодируем RegisterRequestModel как JSON
+        try req.content.encode(registerRequest, as: .json)
 
-        // Вызываем метод контроллера
         let futureResponse = try userController.register(req: req)
         let response = try futureResponse.wait()
 
-        // Проверяем результат
         XCTAssertEqual(response.accessToken, expectedResponse.accessToken)
         XCTAssertEqual(response.apiKey, expectedResponse.apiKey)
     }
@@ -111,14 +105,12 @@ final class UserControllerTests: XCTestCase {
         let loginCredentials = LoginCredentials(username: "loginuser", password: "correct_password")
         let expectedResponse = LoginResponseDTO(accessToken: "valid_access_token")
 
-        // Настраиваем мок-сервис
         mockUserService.loginClosure = { username, password, req in
             XCTAssertEqual(username, "loginuser")
             XCTAssertEqual(password, "correct_password")
             return req.eventLoop.future(expectedResponse)
         }
 
-        // Подготавливаем HTTP запрос
         let req = Request(application: app, method: .POST, url: URI(string: "/auth/login"), on: app.eventLoopGroup.next())
         try req.content.encode(loginCredentials, as: .json)
 
@@ -134,16 +126,13 @@ final class UserControllerTests: XCTestCase {
     func testLoginUserFailure_InvalidCredentials() throws {
         let loginCredentials = LoginCredentials(username: "loginuser", password: "wrong_password")
 
-        // Настраиваем мок-сервис для отказа в логине
         mockUserService.loginClosure = { username, password, req in
             return req.eventLoop.future(error: Abort(.unauthorized))
         }
 
-        // Подготавливаем HTTP запрос
         let req = Request(application: app, method: .POST, url: URI(string: "/auth/login"), on: app.eventLoopGroup.next())
         try req.content.encode(loginCredentials, as: .json)
 
-        // Вызываем метод контроллера и проверяем, что произошла ошибка
         XCTAssertThrowsError(try userController.login(req: req).wait()) { error in
             XCTAssertTrue(error is Abort)
             XCTAssertEqual((error as? Abort)?.status, .unauthorized)
@@ -154,7 +143,6 @@ final class UserControllerTests: XCTestCase {
     func testRegisterUserFailure_UserAlreadyExists() throws {
         let registerRequest = RegisterRequestModel(username: "existinguser", password: "securePassword123")
 
-        // Настраиваем мок-сервис для возвращения ошибки
         mockUserService.registerClosure = { request, req in
             guard request.username != "existinguser" else {
                 return req.eventLoop.future(error: Abort(.conflict, reason: "User already exists"))
@@ -162,11 +150,9 @@ final class UserControllerTests: XCTestCase {
             return req.eventLoop.future(RegisterResponseDTO(accessToken: "sample_access_token", apiKey: "sample_api_key"))
         }
 
-        // Подготавливаем HTTP запрос
         let req = Request(application: app, method: .POST, url: URI(string: "/auth/register"), on: app.eventLoopGroup.next())
         try req.content.encode(registerRequest, as: .json)
 
-        // Проверяем, что произошла ошибка при вызове метода контроллера
         XCTAssertThrowsError(try userController.register(req: req).wait()) { error in
             XCTAssertTrue(error is Abort)
             XCTAssertEqual((error as? Abort)?.status, .conflict)

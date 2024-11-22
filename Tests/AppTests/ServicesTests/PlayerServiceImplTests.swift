@@ -4,6 +4,14 @@ import Vapor
 
 // MARK: - Mock Test Player Repository
 final class MockTestPlayerRepository: PlayerRepository {
+    func findByUserId(userId: UUID, on req: Vapor.Request) -> NIOCore.EventLoopFuture<App.Player?> {
+        return findByUserId(userId: UUID(), on: req)
+    }
+    
+    func findByRoomId(roomId: UUID, on req: Vapor.Request) -> NIOCore.EventLoopFuture<[App.Player]> {
+        return findByRoomId(roomId: UUID(), on: req)
+    }
+    
     var players: [UUID: Player] = [:]
 
     func find(id: UUID, on req: Request) -> EventLoopFuture<Player?> {
@@ -49,7 +57,7 @@ final class PlayerServiceImplTests: XCTestCase {
     }
 
     override func tearDown() {
-        mockPlayerRepository = nil // Явно указываем тип nil
+        mockPlayerRepository = nil 
         playerService = nil
         app.shutdown()
         super.tearDown()
