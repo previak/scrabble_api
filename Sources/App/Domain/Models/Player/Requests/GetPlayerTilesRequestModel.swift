@@ -1,9 +1,9 @@
 import Foundation
 
 final class GetPlayerTilesRequestModel {
-    let playerId: UUID
+    let userId: UUID
     
-    init(playerId: UUID) {
-        self.playerId = playerId
+    init(userId: UUID) {
+        self.userId = userId
     }
 }

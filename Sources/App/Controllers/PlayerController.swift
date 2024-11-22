@@ -12,11 +12,10 @@ struct PlayerController: RouteCollection, Sendable {
     func boot(routes: RoutesBuilder) throws {
         let players = routes.grouped("players")
         
-        players.post("get-player-tiles", use: getPlayerTiles)
+        players.get("get-tiles", use: getPlayerTiles)
             .openAPI(
                 summary: "Get player tiles",
                 description: "Get player tiles",
-                body: .type(GetPlayerTilesRequestDTO.self),
                 response: .type(GetPlayerTilesResponseDTO.self),
                 auth: .apiKey(), .bearer())
         players.get("score", use: getPlayerScore)
@@ -49,15 +48,18 @@ struct PlayerController: RouteCollection, Sendable {
     
     @Sendable
     func getPlayerTiles(req: Request) throws -> EventLoopFuture<GetPlayerTilesResponseDTO> {
-        let request = try req.content.decode(GetPlayerTilesRequestDTO.self)
+        let authHeader = req.headers.bearerAuthorization!
+        let token = authHeader.token
         
-        let getPlayerTilesRequest = GetPlayerTilesRequestModel(
-            playerId: request.playerId
-        )
-        
-        return playerService.getPlayerTiles(getPlayerTilesRequest: getPlayerTilesRequest, on: req)
-            .map{ responseModel in
-                GetPlayerTilesResponseDTO(availableLetters: responseModel.availableLetters)
-            }
+        return userService.authenticate(jwt: token, on: req).flatMap { user in
+            let getPlayerTilesRequest = GetPlayerTilesRequestModel(
+                userId: user.id!
+            )
+            
+            return playerService.getPlayerTiles(getPlayerTilesRequest: getPlayerTilesRequest, on: req)
+                .map{ responseModel in
+                    GetPlayerTilesResponseDTO(availableLetters: responseModel.availableLetters)
+                }
+        }
     }
 }
