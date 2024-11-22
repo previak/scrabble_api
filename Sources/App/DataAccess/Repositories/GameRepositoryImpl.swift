@@ -6,6 +6,12 @@ final class GameRepositoryImpl: GameRepository {
         return Game.find(id, on: req.db)
     }
     
+    func findByRoomId(roomId: UUID, on req: Request) -> EventLoopFuture<Game?> {
+        return Game.query(on: req.db)
+            .filter(\.$room.$id == roomId)
+            .first()
+    }
+    
     func create(game: Game, on req: Request) -> EventLoopFuture<Game> {
         return game.save(on: req.db).map { game }
     }

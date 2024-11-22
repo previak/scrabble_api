@@ -1,8 +1,15 @@
 import Vapor
+import Fluent
 
 final class BoardRepositoryImpl: BoardRepository {
     func find(id: UUID, on req: Request) -> EventLoopFuture<Board?> {
         return Board.find(id, on: req.db)
+    }
+    
+    func findByGameId(gameId: UUID, on req: Request) -> EventLoopFuture<Board?> {
+        return Board.query(on: req.db)
+            .filter(\.$game.$id == gameId)
+            .first()
     }
     
     func create(board: Board, on req: Request) -> EventLoopFuture<Board> {

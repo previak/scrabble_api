@@ -7,7 +7,6 @@ final class RoomRepositoryImpl: RoomRepository {
     }
     
     func find(invitationCode: String, on req: Request) -> EventLoopFuture<Room?> {
-        
         let res = Room.query(on: req.db).all()
         
         return res.map { rooms in
@@ -15,6 +14,9 @@ final class RoomRepositoryImpl: RoomRepository {
         }
     }
     
+    func findByPlayer(_ player: Player, on req: Request) -> EventLoopFuture<Room?> {
+        return Room.find(player.$room.id, on: req.db)
+    }
 
     func create(createRequest: CreateRoomRequest, on req: Request) -> EventLoopFuture<Room> {
         return User.find(createRequest.adminUserId, on: req.db).flatMap { adminOptional -> EventLoopFuture<Room> in
