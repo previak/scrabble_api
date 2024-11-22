@@ -35,19 +35,23 @@ struct GameController: RouteCollection, Sendable {
     func playerDrawTiles(req: Request) throws -> EventLoopFuture<DrawPlayerTilesResponseDTO> {
         let request = try req.content.decode(DrawPlayerTilesRequestDTO.self)
         
-        let drawTilesRequest = DrawPlayerTilesRequestModel(
-            gameId: request.gameId,
-            playerId: request.playerId,
-            letterCount: request.letterCount
-        )
+        let authHeader = req.headers.bearerAuthorization!
+        let token = authHeader.token
         
-        return gameService
-            .playerDrawTiles(drawTilesRequest: drawTilesRequest, on: req)
-            .map { responseModel in
-                DrawPlayerTilesResponseDTO(
-                    tiles: responseModel.tiles
-                )
-            }
+        return userService.authenticate(jwt: token, on: req).flatMap { user in
+            let drawTilesRequest = DrawPlayerTilesRequestModel(
+                userId: user.id!,
+                letterCount: request.letterCount
+            )
+            
+            return gameService
+                .playerDrawTiles(drawTilesRequest: drawTilesRequest, on: req)
+                .map { responseModel in
+                    DrawPlayerTilesResponseDTO(
+                        tiles: responseModel.tiles
+                    )
+                }
+        }
     }
     
     @Sendable
