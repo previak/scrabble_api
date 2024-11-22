@@ -37,7 +37,7 @@ public func configure(_ app: Application) async throws {
     try app.register(collection: BoardController(boardService: boardService))
     try app.register(collection: GameController(gameService: gameService, userService: userService))
     try app.register(collection: PlayerController(playerService: playerService))
-    try app.register(collection: RoomController(roomService: roomService))
+    try app.register(collection: RoomController(roomService: roomService, userService: userService))
     try app.register(collection: UserController(userService: userService))
     try app.register(collection: WordController(wordService: wordService))
     
@@ -53,7 +53,7 @@ public func configure(_ app: Application) async throws {
     try protectedRoutes.register(collection: BoardController(boardService: boardService))
     try protectedRoutes.register(collection: GameController(gameService: gameService, userService: userService))
     try protectedRoutes.register(collection: PlayerController(playerService: playerService))
-    try protectedRoutes.register(collection: RoomController(roomService: roomService))
+    try protectedRoutes.register(collection: RoomController(roomService: roomService, userService: userService))
     try protectedRoutes.register(collection: WordController(wordService: wordService))
     
     

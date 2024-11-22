@@ -3,9 +3,11 @@ import Vapor
 
 struct RoomController: RouteCollection, Sendable {
     private let roomService: RoomService
+    private let userService: UserService
     
-    init(roomService: RoomService) {
+    init(roomService: RoomService, userService: UserService) {
         self.roomService = roomService
+        self.userService = userService
     }
     
     func boot(routes: RoutesBuilder) throws {
@@ -40,35 +42,45 @@ struct RoomController: RouteCollection, Sendable {
     func createRoom(req: Request) throws -> EventLoopFuture<CreateRoomResponseDTO> {
         let request = try req.content.decode(CreateRoomRequestDTO.self)
         
-        let createRoomRequest = CreateRoomRequestModel(
-            userId: request.userId,
-            isOpen: request.isOpen,
-            isPublic: request.isPublic,
-            adminNickname: request.adminNickname
-        )
+        let authHeader = req.headers.bearerAuthorization!
+        let token = authHeader.token
         
-        return roomService
-            .createRoom(createRequest: createRoomRequest, on: req)
-            .map { responseModel in
-                CreateRoomResponseDTO(
-                    adminUserId: responseModel.adminUserId,
-                    invitationCode: responseModel.invitationCode
-                )
-            }
+        return userService.authenticate(jwt: token, on: req).flatMap { user in
+            let createRoomRequest = CreateRoomRequestModel(
+                userId: user.id!,
+                isOpen: request.isOpen,
+                isPublic: request.isPublic,
+                adminNickname: request.adminNickname
+            )
+            
+            return roomService
+                .createRoom(createRequest: createRoomRequest, on: req)
+                .map { responseModel in
+                    CreateRoomResponseDTO(
+                        adminUserId: responseModel.adminUserId,
+                        invitationCode: responseModel.invitationCode
+                    )
+                }
+        }
     }
     
     @Sendable
     func joinRoom(req: Request) throws -> EventLoopFuture<Response> {
         let request = try req.content.decode(JoinRoomRequestDTO.self)
         
-        let joinRoomRequest = JoinRoomRequestModel(
-            userId: request.userId,
-            invitationCode: request.invitationCode,
-            nickname: request.nickname
-        )
+        let authHeader = req.headers.bearerAuthorization!
+        let token = authHeader.token
         
-        return roomService.joinRoom(joinRequest: joinRoomRequest, on: req).map{_ in
-            return Response(statusCode: HTTPResponseStatus.ok)
+        return userService.authenticate(jwt: token, on: req).flatMap { user in
+            let joinRoomRequest = JoinRoomRequestModel(
+                userId: user.id!,
+                invitationCode: request.invitationCode,
+                nickname: request.nickname
+            )
+            
+            return roomService.joinRoom(joinRequest: joinRoomRequest, on: req).map{_ in
+                return Response(statusCode: HTTPResponseStatus.ok)
+            }
         }
     }
     
