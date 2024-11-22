@@ -29,7 +29,7 @@ struct BoardController: RouteCollection, Sendable {
                 response: .type(BoardDTO.self),
                 auth: .apiKey(), .bearer()
             )
-        boards.post(use: getBoard)
+        boards.get(use: getBoard)
             .openAPI(
                 summary: "Get board",
                 description: "Get board by it's Id",
