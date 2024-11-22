@@ -103,4 +103,32 @@ final class RoomServiceImpl: RoomService {
     func deleteRoom(id: UUID, on req: Request) -> EventLoopFuture<Void> {
         return roomRepository.delete(id: id, on: req)
     }
+    
+
+    func kickPlayer(adminUserId: UUID, playerNicknameToKick: String, on req: Request) -> EventLoopFuture<Void> {
+        return Room.query(on: req.db)
+            .filter(\.$admin.$id == adminUserId)
+            .first()
+            .flatMap { adminRoom in
+                guard let adminRoom = adminRoom else {
+                    return req.eventLoop.makeFailedFuture(Abort(.forbidden, reason: "You are not an admin of any room"))
+                }
+                
+                // Find the player by nickname in the admin's room
+                return self.playerRepository.findByNicknameAndRoomId(
+                    nickname: playerNicknameToKick,
+                    roomId: adminRoom.id!,
+                    on: req
+                ).flatMap { playerToKick in
+                    guard let playerToKick = playerToKick else {
+                        return req.eventLoop.makeFailedFuture(Abort(.notFound, reason: "Player not found"))
+                    }
+                    
+                    // Remove the player
+                    return self.playerRepository.delete(playerToKick, on: req)
+                }
+            }
+    }
+
+
 }

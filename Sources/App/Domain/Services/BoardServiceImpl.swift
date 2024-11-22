@@ -23,12 +23,14 @@ final class BoardServiceImpl: BoardService {
     func placeTile(placeTileRequest: PlaceTileRequestModel, on req: Request) -> EventLoopFuture<BoardDTO> {
         
         let board = self.getBoard(getBoardRequest: GetBoardRequestModel(userId: placeTileRequest.userId), on: req)
-        
+        req.logger.info("AMOGUS 2")
         return board.flatMap { board in
             var mutableBoard = board
             
+            req.logger.info("AMOGUS 3")
             mutableBoard.tiles[placeTileRequest.verticalCoord][placeTileRequest.horizontalCoord].letter = placeTileRequest.letter
             
+            req.logger.info("AMOGUS 4")
             return self.updateBoard(board: mutableBoard, on: req).map { updatedBoard in
                 return updatedBoard
             }

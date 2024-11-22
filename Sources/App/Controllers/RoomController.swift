@@ -4,8 +4,11 @@ import Vapor
 struct RoomController: RouteCollection, Sendable {
     private let roomService: RoomService
     private let userService: UserService
+
     
-    init(roomService: RoomService, userService: UserService) {
+    init(
+        roomService: RoomService,
+        userService: UserService) {
         self.roomService = roomService
         self.userService = userService
     }
@@ -34,6 +37,15 @@ struct RoomController: RouteCollection, Sendable {
                 summary: "Rooms list",
                 description: "Get list of all public rooms",
                 response: .type(GetRoomsListResponseDTO.self),
+                auth: .apiKey(), .bearer()
+            )
+        
+        rooms.post("kick", use: kickPlayer)
+            .openAPI(
+                summary: "Kick player",
+                description: "Kick player from room",
+                body: .type(KickPlayerRequestDTO.self),
+                response: .type(Response.self),
                 auth: .apiKey(), .bearer()
             )
     }
@@ -92,6 +104,27 @@ struct RoomController: RouteCollection, Sendable {
             })
             
             return req.eventLoop.makeSucceededFuture(responseDTO)
+        }
+    }
+    
+
+    @Sendable
+    func kickPlayer(req: Request) throws -> EventLoopFuture<Response> {
+        guard let authHeader = req.headers.bearerAuthorization else {
+            return req.eventLoop.makeFailedFuture(Abort(.unauthorized, reason: "Authorization header is missing"))
+        }
+        let token = authHeader.token
+        
+        let kickPlayerRequestDTO = try req.content.decode(KickPlayerRequestDTO.self)
+        
+        return userService.authenticate(jwt: token, on: req).flatMap { adminUser in
+            return self.roomService.kickPlayer(
+                adminUserId: adminUser.id!,
+                playerNicknameToKick: kickPlayerRequestDTO.nickname,
+                on: req
+            ).map {
+                return Response(statusCode: HTTPResponseStatus.ok)
+            }
         }
     }
 }
