@@ -2,9 +2,11 @@ import Vapor
 
 struct PlayerController: RouteCollection, Sendable {
     private let playerService: PlayerService
+    private let userService: UserService
     
-    init(playerService: PlayerService) {
+    init(playerService: PlayerService, userService: UserService) {
         self.playerService = playerService
+        self.userService = userService
     }
     
     func boot(routes: RoutesBuilder) throws {
@@ -17,11 +19,10 @@ struct PlayerController: RouteCollection, Sendable {
                 body: .type(GetPlayerTilesRequestDTO.self),
                 response: .type(GetPlayerTilesResponseDTO.self),
                 auth: .apiKey(), .bearer())
-        players.post("score", use: getPlayerScore)
+        players.get("score", use: getPlayerScore)
             .openAPI(
                 summary: "Get player's score",
-                description: "Get player's score by his Id",
-                body: .type(GetPlayerScoreRequestDTO.self),
+                description: "Get player's score",
                 response: .type(GetPlayerScoreResponseDTO.self),
                 auth: .apiKey(), .bearer()
             )
@@ -29,18 +30,21 @@ struct PlayerController: RouteCollection, Sendable {
     
     @Sendable
     func getPlayerScore(req: Request) throws -> EventLoopFuture<GetPlayerScoreResponseDTO> {
-        let request = try req.content.decode(GetPlayerScoreRequestDTO.self)
-
-        let getPlayerScoreRequest = GetPlayerScoreRequestModel(
-            playerId: request.playerId
-        )
+        let authHeader = req.headers.bearerAuthorization!
+        let token = authHeader.token
         
-        return playerService.getPlayerScore(getPlayerScoreRequest: getPlayerScoreRequest, on: req)
-            .map { responseModel in
-                GetPlayerScoreResponseDTO(
-                    score: responseModel.score
-                )
-            }
+        return userService.authenticate(jwt: token, on: req).flatMap { user in
+            let getPlayerScoreRequest = GetPlayerScoreRequestModel(
+                userId: user.id!
+            )
+            
+            return playerService.getPlayerScore(getPlayerScoreRequest: getPlayerScoreRequest, on: req)
+                .map { responseModel in
+                    GetPlayerScoreResponseDTO(
+                        score: responseModel.score
+                    )
+                }
+        }
     }
     
     @Sendable
