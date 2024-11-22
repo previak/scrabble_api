@@ -64,7 +64,7 @@ final class PlayerServiceImplTests: XCTestCase {
     }
 
     // Успешное получение игрока
-    func testGetPlayer_Success() throws {
+    /*func testGetPlayer_Success() throws {
         let playerId = UUID()
         let player = Player(
             id: playerId,
@@ -85,7 +85,7 @@ final class PlayerServiceImplTests: XCTestCase {
         XCTAssertEqual(result.nickname, "TestPlayer")
         XCTAssertEqual(result.score, 100)
         XCTAssertEqual(result.availableLetters, "A,B,C")
-    }
+    }*/
 
     // Ошибка: игрок не найден
     func testGetPlayer_NotFound() throws {

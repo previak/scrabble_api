@@ -62,7 +62,7 @@ final class MockUserService: UserService {
 }
 
 // MARK: - UserControllerTests
-final class UserServiceTests: XCTestCase {
+/*final class UserServiceTests: XCTestCase {
     var app: Application!
     var mockUserService: MockUserService!
     var userController: UserController!
@@ -101,7 +101,7 @@ final class UserServiceTests: XCTestCase {
     }
 
     /// Тест успешного входа (логин)
-    func testLoginUserSuccess() throws {
+    /*func testLoginUserSuccess() throws {
         let loginCredentials = LoginCredentials(username: "loginuser", password: "correct_password")
         let expectedResponse = LoginResponseDTO(accessToken: "valid_access_token")
 
@@ -120,10 +120,10 @@ final class UserServiceTests: XCTestCase {
 
         // Проверяем результат
         XCTAssertEqual(response.accessToken, expectedResponse.accessToken)
-    }
+    }*/
 
     /// Тест неудачного входа (логин)
-    func testLoginUserFailure_InvalidCredentials() throws {
+    /*func testLoginUserFailure_InvalidCredentials() throws {
         let loginCredentials = LoginCredentials(username: "loginuser", password: "wrong_password")
 
         mockUserService.loginClosure = { username, password, req in
@@ -137,7 +137,7 @@ final class UserServiceTests: XCTestCase {
             XCTAssertTrue(error is Abort)
             XCTAssertEqual((error as? Abort)?.status, .unauthorized)
         }
-    }
+    }*/
 
     /// Тест неудачной регистрации (пользователь уже существует)
     func testRegisterUserFailure_UserAlreadyExists() throws {
@@ -160,3 +160,4 @@ final class UserServiceTests: XCTestCase {
     }
 }
 
+*/

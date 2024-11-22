@@ -4,6 +4,18 @@ import XCTest
 @testable import App
 
 final class MockUserServiceCon: UserService {
+    func register(registerRequest: App.RegisterRequestModel, on req: Vapor.Request) -> NIOCore.EventLoopFuture<App.RegisterResponseModel> {
+        registerCalled = true
+        if let error = self.error {
+            return req.eventLoop.makeFailedFuture(error)
+        }
+        if let response = registerResponse {
+            return req.eventLoop.makeSucceededFuture(response)
+        } else {
+            return req.eventLoop.makeFailedFuture(Abort(.internalServerError, reason: "Mock registerResponse not provided"))
+        }
+    }
+    
     func getUser(id: UUID, on req: Vapor.Request) -> NIOCore.EventLoopFuture<App.UserDTO> {
         return getUser(id: id, on: req)
     }
@@ -20,9 +32,9 @@ final class MockUserServiceCon: UserService {
         return deleteUser(id: id, on: req)
     }
     
-    func register(registerRequest: App.RegisterRequestModel, on req: Vapor.Request) -> NIOCore.EventLoopFuture<App.RegisterResponseModel> {
+    /*func register(registerRequest: App.RegisterRequestModel, on req: Vapor.Request) -> NIOCore.EventLoopFuture<App.RegisterResponseModel> {
         return register(registerRequest: registerRequest, on: req)
-    }
+    }*/
     
     var registerCalled = false
     var loginCalled = false
